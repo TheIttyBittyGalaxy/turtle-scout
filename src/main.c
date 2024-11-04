@@ -2,6 +2,33 @@
 #include <stdbool.h>
 #include <string.h>
 
+// ITERATE TRAINING //
+void iterate_training(Population *population, NovelHistory *novel_history)
+{
+    /*
+    GENERATE NEW world
+    FOR EACH scout IN population:
+        REPEAT 1000 TIMES:
+            EVALUATE scout's network
+            DO scout's action IN world
+            UPDATE world
+            UPDATE scout's stats
+
+    FOR EACH scout IN population:
+        ASSIGN novelty_score TO scout
+
+    PRESERVE TOP 16 scouts
+    DELETE BOTTOM 16 scouts
+    DELETE 16 scouts at random
+
+    REPEAT 32 TIMES:
+        SELECT RANDOM original_scout
+        CREATE new_scout WITH MUTATIONS
+        ADD new_scout TO population
+    */
+}
+
+// MAIN FUNCTION //
 #define CMD_CHAR_LIMIT 256
 
 int main(int argc, char const *argv[])
@@ -29,7 +56,7 @@ int main(int argc, char const *argv[])
             printf("Sorry, I haven't written this yet..\n");
         }
 
-        // COMMAND: spawn <size>
+        // COMMAND: spawn
         // Create a new population of scouts
         else if (strcmp(cmd_buffer, "spawn") == 0)
         {
@@ -40,7 +67,8 @@ int main(int argc, char const *argv[])
         // Run a learning iteration
         else if (strcmp(cmd_buffer, "train") == 0)
         {
-            // TODO: Implement
+            // TODO: Repeat this as many times as dictated by the command argument
+            iterate_training(&population, &novel_history);
         }
 
         // COMMAND: info

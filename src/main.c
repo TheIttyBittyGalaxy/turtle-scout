@@ -1,4 +1,5 @@
 #include <float.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,20 +30,16 @@ typedef struct
     void *unimplemented;
 } Action;
 
-// SCOUT //
-typedef struct
-{
-    NetworkParameters parameters;
-} Scout;
-
 // SCOUT POPULATION //
 typedef struct
 {
-    Scout *scouts;
-    Stats *stats;
-    double *scores;
     size_t scout_count;
     size_t array_length;
+
+    NetworkParameters *scout_parameters;
+    Stats *scout_stats;
+    double *scout_novelty_score;
+    size_t *scout_generation;
 } Population;
 
 // TODO: Implement
@@ -51,14 +48,16 @@ void evaluate_network(const NetworkParameters parameters, NetworkValues *values)
 Action determine_network_action(network_values);
 Stats update_world(World *world, const Action action);
 void add_stats(Stats *stats, const Stats stats_delta);
+double stats_distance(const Stats stats_one, const Stats stats_two);
 
 // ITERATE TRAINING //
 void iterate_training(Population *population)
 {
     size_t scout_count = population->scout_count;
-    Scout *scouts = population->scouts;
-    Stats *stats = population->stats;
-    double *scores = population->scores;
+    NetworkParameters *scout_parameters = population->scout_parameters;
+    Stats *scout_stats = population->scout_stats;
+    double *scout_novelty_score = population->scout_novelty_score;
+    size_t *scout_generation = population->scout_generation;
 
     // Generate world
     World world_blueprint;
@@ -69,7 +68,7 @@ void iterate_training(Population *population)
     NetworkValues network_values;
     for (size_t i = 0; i < scout_count; i++)
     {
-        NetworkParameters parameters = scouts[i].parameters;
+        NetworkParameters parameters = scout_parameters[i];
         memcpy(&active_world, &world_blueprint, sizeof(World));
         for (size_t n = 0; n < 1000; n++)
         {
@@ -77,7 +76,7 @@ void iterate_training(Population *population)
             evaluate_network(parameters, &network_values);
             Action action = determine_network_action(network_values);
             Stats stats_delta = update_world(&active_world, action);
-            add_stats(stats + i, stats_delta);
+            add_stats(scout_stats + i, stats_delta);
         }
     }
 
@@ -100,7 +99,7 @@ void iterate_training(Population *population)
             if (i == j)
                 continue;
 
-            double dist = novelty_dist(stats[i]);
+            double dist = stats_distance(scout_stats[i], scout_stats[j]);
             for (size_t s = 0; s < 8; s++)
             {
                 if (dist < nearest_scouts[s])
@@ -123,6 +122,8 @@ void iterate_training(Population *population)
                         nearest_scouts[6] +
                         nearest_scouts[7]) /
                        8;
+
+        scout_novelty_score[i] = score;
     }
 
     // TODO: Remove half the population with a bias towards removing scouts with a low novelty score.
@@ -137,11 +138,12 @@ int main(int argc, char const *argv[])
     char cmd_buffer[CMD_CHAR_LIMIT];
 
     Population population;
-    population.scouts = (Scout *)malloc(sizeof(Scout) * 128);
-    population.stats = (Stats *)malloc(sizeof(Stats) * 128);
-    population.scores = (double *)malloc(sizeof(double) * 128);
     population.scout_count = 0;
     population.array_length = 128;
+    population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * 128);
+    population.scout_stats = (Stats *)malloc(sizeof(Stats) * 128);
+    population.scout_novelty_score = (double *)malloc(sizeof(double) * 128);
+    population.scout_generation = (size_t *)malloc(sizeof(size_t) * 128);
 
     while (true)
     {

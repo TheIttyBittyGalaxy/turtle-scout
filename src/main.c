@@ -13,11 +13,6 @@ typedef struct
 typedef struct
 {
     void *unimplemented;
-} Stats;
-
-typedef struct
-{
-    void *unimplemented;
 } NetworkValues;
 
 typedef struct
@@ -30,6 +25,10 @@ typedef struct
     void *unimplemented;
 } Action;
 
+// STATISTICS //
+#define NUM_OF_STATISTICS 8
+typedef int Statistics[NUM_OF_STATISTICS];
+
 // SCOUT POPULATION //
 typedef struct
 {
@@ -37,7 +36,7 @@ typedef struct
     size_t array_length;
 
     NetworkParameters *scout_parameters;
-    Stats *scout_stats;
+    Statistics *scout_stats;
     double *scout_novelty_score;
     size_t *scout_generation;
 } Population;
@@ -46,16 +45,27 @@ typedef struct
 void set_network_inputs(NetworkValues *values, const World world);
 void evaluate_network(const NetworkParameters parameters, NetworkValues *values);
 Action determine_network_action(network_values);
-Stats update_world(World *world, const Action action);
-void add_stats(Stats *stats, const Stats stats_delta);
-double stats_distance(const Stats stats_one, const Stats stats_two);
+void update_world(World *world, const Action action, Statistics *stats_delta);
+void add_stats(Statistics *stats, const Statistics stats_delta);
+
+// CALCULATE NOVELTY DISTANCE //
+
+// NOTE: In the interests of speed, I'm using taxi-cab distance here (i.e. I'm not square rooting anything)
+//       For this purpose, I think that's fine?
+double novelty_distance(const Statistics stats_one, const Statistics stats_two)
+{
+    double score = 0;
+    for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
+        score += abs(stats_one[i] - stats_two[i]);
+    return score;
+}
 
 // ITERATE TRAINING //
 void iterate_training(Population *population)
 {
     size_t scout_count = population->scout_count;
     NetworkParameters *scout_parameters = population->scout_parameters;
-    Stats *scout_stats = population->scout_stats;
+    Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
     size_t *scout_generation = population->scout_generation;
 
@@ -75,7 +85,8 @@ void iterate_training(Population *population)
             set_network_inputs(&network_values, active_world);
             evaluate_network(parameters, &network_values);
             Action action = determine_network_action(network_values);
-            Stats stats_delta = update_world(&active_world, action);
+            Statistics stats_delta;
+            update_world(&active_world, action, stats_delta);
             add_stats(scout_stats + i, stats_delta);
         }
     }
@@ -99,7 +110,7 @@ void iterate_training(Population *population)
             if (i == j)
                 continue;
 
-            double dist = stats_distance(scout_stats[i], scout_stats[j]);
+            double dist = novelty_distance(scout_stats[i], scout_stats[j]);
             for (size_t s = 0; s < 8; s++)
             {
                 if (dist < nearest_scouts[s])
@@ -141,7 +152,7 @@ int main(int argc, char const *argv[])
     population.scout_count = 0;
     population.array_length = 128;
     population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * 128);
-    population.scout_stats = (Stats *)malloc(sizeof(Stats) * 128);
+    population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * 128);
     population.scout_novelty_score = (double *)malloc(sizeof(double) * 128);
     population.scout_generation = (size_t *)malloc(sizeof(size_t) * 128);
 

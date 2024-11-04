@@ -185,7 +185,23 @@ int main(int argc, char const *argv[])
         // Get information about the current population
         else if (strcmp(cmd_buffer, "info") == 0)
         {
-            // TODO: Implement
+            printf("| ACTIVE POPULATION\n");
+            for (size_t i = 0; i < 64; i++)
+            {
+                printf("%02d | %f\t%d\n",
+                       i,
+                       population.scout_novelty_score[i],
+                       population.scout_generation[i]);
+            }
+
+            printf("| HISTORIC NOVELTY\n");
+            for (size_t i = 64; i < population.scout_count; i++)
+            {
+                printf("%02d | %f\t%d\n",
+                       i,
+                       population.scout_novelty_score[i],
+                       population.scout_generation[i]);
+            }
         }
 
         // COMMAND: quit

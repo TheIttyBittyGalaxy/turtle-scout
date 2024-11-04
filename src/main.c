@@ -2,6 +2,39 @@
 #include <stdbool.h>
 #include <string.h>
 
+// NETWORK PARAMETERS //
+typedef struct
+{
+    int foo; // TODO: Implement
+} NetworkParameters;
+
+// STAT SHEET //
+typedef struct
+{
+    int foo; // TODO: Implement
+} StatSheet;
+
+// SCOUT //
+typedef struct
+{
+    NetworkParameters parameters;
+    StatSheet stats;
+} Scout;
+
+// POPULATION //
+typedef struct
+{
+    Scout scouts[64];
+} Population;
+
+// NOVEL HISTORY
+typedef struct
+{
+    Scout *scouts;
+    size_t scout_count;
+    size_t array_length;
+} NovelHistory;
+
 // ITERATE TRAINING //
 void iterate_training(Population *population, NovelHistory *novel_history)
 {
@@ -34,6 +67,13 @@ void iterate_training(Population *population, NovelHistory *novel_history)
 int main(int argc, char const *argv[])
 {
     char cmd_buffer[CMD_CHAR_LIMIT];
+
+    Population population;
+
+    NovelHistory novel_history;
+    novel_history.scouts = (Scout *)malloc(sizeof(Scout) * 8);
+    novel_history.scout_count = 0;
+    novel_history.array_length = 8;
 
     while (true)
     {

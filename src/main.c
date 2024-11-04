@@ -1,64 +1,132 @@
-#include <stdio.h>
+#include <float.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
-// NETWORK PARAMETERS //
+// TODO: Implement
 typedef struct
 {
-    int foo; // TODO: Implement
+    void *unimplemented;
 } NetworkParameters;
 
-// STAT SHEET //
 typedef struct
 {
-    int foo; // TODO: Implement
-} StatSheet;
+    void *unimplemented;
+} Stats;
+
+typedef struct
+{
+    void *unimplemented;
+} NetworkValues;
+
+typedef struct
+{
+    void *unimplemented;
+} World;
+
+typedef struct
+{
+    void *unimplemented;
+} Action;
 
 // SCOUT //
 typedef struct
 {
     NetworkParameters parameters;
-    StatSheet stats;
 } Scout;
 
-// POPULATION //
-typedef struct
-{
-    Scout scouts[64];
-} Population;
-
-// NOVEL HISTORY
+// SCOUT POPULATION //
 typedef struct
 {
     Scout *scouts;
+    Stats *stats;
+    double *scores;
     size_t scout_count;
     size_t array_length;
-} NovelHistory;
+} Population;
+
+// TODO: Implement
+void set_network_inputs(NetworkValues *values, const World world);
+void evaluate_network(const NetworkParameters parameters, NetworkValues *values);
+Action determine_network_action(network_values);
+Stats update_world(World *world, const Action action);
+void add_stats(Stats *stats, const Stats stats_delta);
 
 // ITERATE TRAINING //
-void iterate_training(Population *population, NovelHistory *novel_history)
+void iterate_training(Population *population)
 {
-    /*
-    GENERATE NEW world
-    FOR EACH scout IN population:
-        REPEAT 1000 TIMES:
-            EVALUATE scout's network
-            DO scout's action IN world
-            UPDATE world
-            UPDATE scout's stats
+    size_t scout_count = population->scout_count;
+    Scout *scouts = population->scouts;
+    Stats *stats = population->stats;
+    double *scores = population->scores;
 
-    FOR EACH scout IN population:
-        ASSIGN novelty_score TO scout
+    // Generate world
+    World world_blueprint;
+    generate_world(&world_blueprint);
+    World active_world;
 
-    PRESERVE TOP 16 scouts
-    DELETE BOTTOM 16 scouts
-    DELETE 16 scouts at random
+    // Evaluate each scout
+    NetworkValues network_values;
+    for (size_t i = 0; i < scout_count; i++)
+    {
+        NetworkParameters parameters = scouts[i].parameters;
+        memcpy(&active_world, &world_blueprint, sizeof(World));
+        for (size_t n = 0; n < 1000; n++)
+        {
+            set_network_inputs(&network_values, active_world);
+            evaluate_network(parameters, &network_values);
+            Action action = determine_network_action(network_values);
+            Stats stats_delta = update_world(&active_world, action);
+            add_stats(stats + i, stats_delta);
+        }
+    }
 
-    REPEAT 32 TIMES:
-        SELECT RANDOM original_scout
-        CREATE new_scout WITH MUTATIONS
-        ADD new_scout TO population
-    */
+    // Generate novelty scores
+    for (size_t i = 0; i < scout_count; i++)
+    {
+        // Find the 8 scouts with the most similar stats and their distances
+        double nearest_scouts[8];
+        nearest_scouts[0] = DBL_MAX;
+        nearest_scouts[1] = DBL_MAX;
+        nearest_scouts[2] = DBL_MAX;
+        nearest_scouts[3] = DBL_MAX;
+        nearest_scouts[4] = DBL_MAX;
+        nearest_scouts[5] = DBL_MAX;
+        nearest_scouts[6] = DBL_MAX;
+        nearest_scouts[7] = DBL_MAX;
+
+        for (size_t j = 0; j < scout_count; j++)
+        {
+            if (i == j)
+                continue;
+
+            double dist = novelty_dist(stats[i]);
+            for (size_t s = 0; s < 8; s++)
+            {
+                if (dist < nearest_scouts[s])
+                {
+                    for (size_t n = 7; n > s; n--)
+                        nearest_scouts[n] = nearest_scouts[n - 1];
+                    nearest_scouts[s] = dist;
+                    break;
+                }
+            }
+        }
+
+        // This scout's novelty score is the average of the 8 closest distances
+        double score = (nearest_scouts[0] +
+                        nearest_scouts[1] +
+                        nearest_scouts[2] +
+                        nearest_scouts[3] +
+                        nearest_scouts[4] +
+                        nearest_scouts[5] +
+                        nearest_scouts[6] +
+                        nearest_scouts[7]) /
+                       8;
+    }
+
+    // TODO: Remove half the population with a bias towards removing scouts with a low novelty score.
+    // TODO: Repopulate by duplicating surviving members of the population and adding mutations.
 }
 
 // MAIN FUNCTION //
@@ -69,11 +137,11 @@ int main(int argc, char const *argv[])
     char cmd_buffer[CMD_CHAR_LIMIT];
 
     Population population;
-
-    NovelHistory novel_history;
-    novel_history.scouts = (Scout *)malloc(sizeof(Scout) * 8);
-    novel_history.scout_count = 0;
-    novel_history.array_length = 8;
+    population.scouts = (Scout *)malloc(sizeof(Scout) * 128);
+    population.stats = (Stats *)malloc(sizeof(Stats) * 128);
+    population.scores = (double *)malloc(sizeof(double) * 128);
+    population.scout_count = 0;
+    population.array_length = 128;
 
     while (true)
     {
@@ -108,7 +176,7 @@ int main(int argc, char const *argv[])
         else if (strcmp(cmd_buffer, "train") == 0)
         {
             // TODO: Repeat this as many times as dictated by the command argument
-            iterate_training(&population, &novel_history);
+            iterate_training(&population);
         }
 
         // COMMAND: info

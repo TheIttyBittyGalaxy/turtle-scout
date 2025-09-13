@@ -4,16 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 
-// TODO: Implement
-typedef struct
-{
-    void *unimplemented;
-} NetworkParameters;
+// NETWORK VALUES & PARAMETERS //
+
+#define NUM_OF_NODES 64
+
+typedef int NetworkValues[NUM_OF_NODES];
 
 typedef struct
 {
-    void *unimplemented;
-} NetworkValues;
+    double bias[NUM_OF_NODES];
+    double weight[NUM_OF_NODES][NUM_OF_NODES];
+} NetworkParameters;
+
+// TODO: Implement
 
 typedef struct
 {
@@ -26,7 +29,9 @@ typedef struct
 } Action;
 
 // STATISTICS //
+
 #define NUM_OF_STATISTICS 8
+
 typedef int Statistics[NUM_OF_STATISTICS];
 
 void initialise_scout_stats(Statistics *stats)
@@ -36,6 +41,7 @@ void initialise_scout_stats(Statistics *stats)
 }
 
 // SCOUT POPULATION //
+
 typedef struct
 {
     size_t capacity;     // Capacity of the array
@@ -80,9 +86,23 @@ void add_stats(Statistics *stats, const Statistics stats_delta)
     // TODO: Implement
 }
 
+// RANDOMISE NETWORK PARAMETER
+
+double rand_param()
+{
+    double a = (double)rand() / RAND_MAX;
+    double b = (double)rand() / RAND_MAX;
+    return a + b - 1;
+}
+
 void randomise_scout_parameters(NetworkParameters *parameters)
 {
-    // TODO: Implement
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        parameters->bias[i] = rand_param();
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        for (size_t j = 0; j < NUM_OF_NODES; j++)
+            parameters->weight[i][j] = rand_param();
 }
 
 // CALCULATE NOVELTY DISTANCE //
@@ -122,6 +142,9 @@ void iterate_training(Population *population)
         memcpy(&copy_of_environment, &environment, sizeof(Environment));
 
         initialise_scout_stats(scout_stats + i);
+
+        for (size_t i = 0; i < NUM_OF_NODES; i++)
+            network_values[i] = parameters.bias[i];
 
         for (size_t n = 0; n < 1000; n++)
         {

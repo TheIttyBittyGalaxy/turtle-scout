@@ -647,7 +647,7 @@ void iterate_training(Population *population)
         init_scout_stats(scout_stats + i);
         copy_environment(&environment, &copy_of_environment);
 
-        for (size_t n = 0; n < 1000; n++)
+        for (size_t n = 0; n < 128; n++)
         {
             set_network_inputs(&network_values, copy_of_environment);
             evaluate_network(parameters, &network_values);

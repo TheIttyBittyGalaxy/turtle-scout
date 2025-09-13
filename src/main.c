@@ -29,6 +29,12 @@ typedef struct
 #define NUM_OF_STATISTICS 8
 typedef int Statistics[NUM_OF_STATISTICS];
 
+void initialise_scout_stats(Statistics *stats)
+{
+    for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
+        (*stats)[i] = 0;
+}
+
 // SCOUT POPULATION //
 typedef struct
 {
@@ -46,17 +52,17 @@ typedef struct
 
 void generate_environment(Environment *environment)
 {
-    return; // TODO: Implement
+    // TODO: Implement
 }
 
 void set_network_inputs(NetworkValues *values, const Environment world)
 {
-    return; // TODO: Implement
+    // TODO: Implement
 }
 
 void evaluate_network(const NetworkParameters parameters, NetworkValues *values)
 {
-    return; // TODO: Implement
+    // TODO: Implement
 }
 
 Action determine_network_action(const NetworkValues network_values)
@@ -66,12 +72,17 @@ Action determine_network_action(const NetworkValues network_values)
 
 void update_environment(Environment *world, const Action action, Statistics *stats_delta)
 {
-    return; // TODO: Implement
+    // TODO: Implement
 }
 
 void add_stats(Statistics *stats, const Statistics stats_delta)
 {
-    return; // TODO: Implement
+    // TODO: Implement
+}
+
+void randomise_scout_parameters(NetworkParameters *parameters)
+{
+    // TODO: Implement
 }
 
 // CALCULATE NOVELTY DISTANCE //
@@ -109,6 +120,8 @@ void iterate_training(Population *population)
 
         // TODO: Ensure this creates a deep copy of the environment
         memcpy(&copy_of_environment, &environment, sizeof(Environment));
+
+        initialise_scout_stats(scout_stats + i);
 
         for (size_t n = 0; n < 1000; n++)
         {
@@ -213,7 +226,14 @@ int main(int argc, char const *argv[])
         // Create a new population of scouts
         else if (strcmp(cmd_buffer, "spawn") == 0)
         {
-            // TODO: Implement
+            population.active_count = 64;
+            for (size_t i = 0; i < population.active_count; i++)
+            {
+                randomise_scout_parameters(population.scout_parameters + i);
+                initialise_scout_stats(population.scout_stats + i);
+                population.scout_novelty_score[i] = 0;
+                population.scout_generation[i] = 0;
+            }
         }
 
         // COMMAND: train <iterations>

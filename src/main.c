@@ -90,11 +90,6 @@ void update_environment(Environment *world, const Action action, Statistics *sta
     // TODO: Implement
 }
 
-void mutate_parameters(NetworkParameters *parameters)
-{
-    // TODO: Implement
-}
-
 // MANIPULATE NETWORK PARAMETERS //
 
 // Generates a random number from -1 to 1, with a bias towards 0
@@ -114,6 +109,29 @@ void randomise_scout_parameters(NetworkParameters *parameters)
     for (size_t i = 0; i < NUM_OF_NODES; i++)
         for (size_t j = 0; j < NUM_OF_NODES; j++)
             parameters->weight[i][j] = rand_normal();
+}
+
+void mutate_parameters(NetworkParameters *parameters)
+{
+#define MUTATE(x)                     \
+    {                                 \
+        int r = rand() % 2000;        \
+        if (r < 1)                    \
+            x += rand_normal();       \
+        else if (r < 10)              \
+            x += rand_normal() / 10;  \
+        else if (r < 100)             \
+            x += rand_normal() / 100; \
+    }
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        MUTATE(parameters->bias[i])
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        for (size_t j = 0; j < NUM_OF_NODES; j++)
+            MUTATE(parameters->weight[i][j])
+
+#undef MUTATE
 }
 
 // CALCULATE NOVELTY DISTANCE //

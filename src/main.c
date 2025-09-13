@@ -204,6 +204,12 @@ typedef struct
     double weight[NUM_OF_NODES][NUM_OF_NODES]; // weight[a][b] is connection from a to b
 } NetworkParameters;
 
+void reset_network_values(NetworkValues *values, const NetworkParameters parameters)
+{
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        (*values)[i] = parameters.bias[i];
+}
+
 // EVALUATE NETWORK //
 
 void evaluate_network(const NetworkParameters parameter, NetworkValues *value)
@@ -238,7 +244,7 @@ typedef struct
     int stat[NUM_OF_STATISTICS];
 } Statistics;
 
-void initialise_scout_stats(Statistics *scout_stats)
+void init_scout_stats(Statistics *scout_stats)
 {
     for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
         scout_stats->stat[i] = 0;
@@ -276,7 +282,7 @@ Action determine_network_action(const NetworkValues network_values)
     return {}; // TODO: Implement
 }
 
-void update_environment(Environment *world, const Action action, Statistics *stats_delta)
+void perform_action(Environment *world, const Action action, Statistics *stats)
 {
     // TODO: Implement
 }
@@ -374,26 +380,21 @@ void iterate_training(Population *population)
     dump_environment(environment);
 
     // Evaluate each scout
-    NetworkValues network_values;
     for (size_t i = 0; i < active_count; i++)
     {
+        NetworkValues network_values;
         NetworkParameters parameters = scout_parameters[i];
 
-        for (size_t i = 0; i < NUM_OF_NODES; i++)
-            network_values[i] = parameters.bias[i];
-
+        reset_network_values(&network_values, parameters);
+        init_scout_stats(scout_stats + i);
         copy_environment(&environment, &copy_of_environment);
-        initialise_scout_stats(scout_stats + i);
 
         for (size_t n = 0; n < 1000; n++)
         {
             set_network_inputs(&network_values, copy_of_environment);
             evaluate_network(parameters, &network_values);
             Action action = determine_network_action(network_values);
-
-            Statistics stats_delta;
-            update_environment(&copy_of_environment, action, &stats_delta);
-            add_stats(scout_stats + i, stats_delta);
+            perform_action(&copy_of_environment, action, scout_stats + i);
         }
     }
 
@@ -531,7 +532,7 @@ int main(int argc, char const *argv[])
             for (size_t i = 0; i < population.active_count; i++)
             {
                 randomise_scout_parameters(population.scout_parameters + i);
-                initialise_scout_stats(population.scout_stats + i);
+                init_scout_stats(population.scout_stats + i);
                 population.scout_novelty_score[i] = 0;
                 population.scout_generation[i] = 0;
             }

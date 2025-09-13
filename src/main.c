@@ -40,6 +40,12 @@ void initialise_scout_stats(Statistics *stats)
         (*stats)[i] = 0;
 }
 
+void add_stats(Statistics *stats, const Statistics stats_delta)
+{
+    for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
+        (*stats)[i] += stats_delta[i];
+}
+
 // SCOUT POPULATION //
 
 typedef struct
@@ -77,11 +83,6 @@ Action determine_network_action(const NetworkValues network_values)
 }
 
 void update_environment(Environment *world, const Action action, Statistics *stats_delta)
-{
-    // TODO: Implement
-}
-
-void add_stats(Statistics *stats, const Statistics stats_delta)
 {
     // TODO: Implement
 }

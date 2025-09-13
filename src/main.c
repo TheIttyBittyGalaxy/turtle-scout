@@ -817,6 +817,8 @@ void save_parameters_to_lua(const NetworkParameters parameters)
 int main(int argc, char const *argv[])
 {
     char cmd_buffer[CMD_CHAR_LIMIT];
+    char *cmd_args[8];
+    size_t cmd_arg_count;
 
     Population population;
     population.count = 0;
@@ -831,9 +833,16 @@ int main(int argc, char const *argv[])
     {
         printf("> ");
         fgets(cmd_buffer, CMD_CHAR_LIMIT, stdin);
+
+        cmd_arg_count = 0;
         for (size_t i = 0; i < CMD_CHAR_LIMIT; i++)
         {
-            if (cmd_buffer[i] == '\n')
+            if (cmd_buffer[i] == ' ')
+            {
+                cmd_buffer[i] = '\0';
+                cmd_args[cmd_arg_count++] = cmd_buffer + i + 1;
+            }
+            else if (cmd_buffer[i] == '\n')
             {
                 cmd_buffer[i] = '\0';
                 break;
@@ -867,8 +876,20 @@ int main(int argc, char const *argv[])
         // Run a learning iteration
         else if (strcmp(cmd_buffer, "train") == 0)
         {
-            // TODO: Repeat this as many times as dictated by the command argument
-            iterate_training(&population);
+            if (cmd_arg_count == 0)
+            {
+                iterate_training(&population);
+            }
+            else if (cmd_arg_count == 1)
+            {
+                size_t iterations = atoi(cmd_args[0]);
+                for (size_t i = 0; i < iterations; i++)
+                    iterate_training(&population);
+            }
+            else
+            {
+                printf("Usage: train <iterations>\n");
+            }
         }
 
         // COMMAND: info

@@ -492,6 +492,12 @@ void perform_action(Environment *environment, const Action action, Statistics *s
             environment->scout_x += x_offset_of(environment->scout_facing);
             environment->scout_z += z_offset_of(environment->scout_facing);
         }
+        else
+        {
+            return; // Could not move
+        }
+
+        stats->stat[MOVED]++;
 
         return;
     }

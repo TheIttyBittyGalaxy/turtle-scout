@@ -250,6 +250,7 @@ int main(int argc, char const *argv[])
         // Create a new population of scouts
         else if (strcmp(cmd_buffer, "spawn") == 0)
         {
+            population.count = 64;
             population.active_count = 64;
             for (size_t i = 0; i < population.active_count; i++)
             {

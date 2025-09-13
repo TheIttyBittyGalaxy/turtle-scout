@@ -95,9 +95,11 @@ void mutate_parameters(NetworkParameters *parameters)
     // TODO: Implement
 }
 
-// RANDOMISE NETWORK PARAMETER
+// MANIPULATE NETWORK PARAMETERS //
 
-double rand_param()
+// Generates a random number from -1 to 1, with a bias towards 0
+// Not an actual normal distribution, but quick and cheap to calculate
+double rand_normal()
 {
     double a = (double)rand() / RAND_MAX;
     double b = (double)rand() / RAND_MAX;
@@ -107,11 +109,11 @@ double rand_param()
 void randomise_scout_parameters(NetworkParameters *parameters)
 {
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        parameters->bias[i] = rand_param();
+        parameters->bias[i] = rand_normal();
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            parameters->weight[i][j] = rand_param();
+            parameters->weight[i][j] = rand_normal();
 }
 
 // CALCULATE NOVELTY DISTANCE //

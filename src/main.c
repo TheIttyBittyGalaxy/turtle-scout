@@ -4,6 +4,107 @@
 #include <stdio.h>
 #include <string.h>
 
+// ENVIRONMENTS //
+
+typedef enum
+{
+    AIR,
+    STONE,
+    DIRT,
+    GRASS,
+} Block;
+
+typedef struct
+{
+    int world_x;
+    int world_y;
+    int world_z;
+    Block block[16][16][16];
+} Segment;
+
+typedef struct
+{
+    size_t count;
+    size_t capacity;
+
+    // TODO: Make this a hash map rather than an array.
+    // This will make look-up faster, and will also mean
+    // segments do not have to store their own coordinates.
+    Segment *segment;
+} Environment;
+
+void init_environment(Environment *environment)
+{
+    environment->count = 0;
+    environment->capacity = 0;
+    environment->segment = NULL;
+}
+
+void free_environment(Environment *environment)
+{
+    environment->count = 0;
+    environment->capacity = 0;
+    if (environment->segment)
+        free(environment->segment);
+}
+
+void copy_environment(Environment *src, Environment *dst)
+{
+    if (dst->capacity == 0)
+    {
+        dst->capacity = src->capacity;
+        dst->segment = (Segment *)malloc(dst->capacity * sizeof(Segment));
+    }
+    else if (dst->capacity < src->capacity)
+    {
+        dst->capacity = src->capacity;
+        dst->segment = (Segment *)realloc(dst->segment, dst->capacity * sizeof(Segment));
+    }
+
+    dst->count = src->count;
+    for (size_t i = 0; i < src->count; i++)
+        dst->segment[i] = src->segment[i];
+}
+
+// WORLD GEN //
+
+Segment generate_segment(int world_x, int world_y, int world_z)
+{
+    Segment segment;
+    segment.world_x = world_x;
+    segment.world_y = world_y;
+    segment.world_z = world_z;
+
+    if (world_y > 0)
+    {
+        for (size_t x = 0; x < 16; x++)
+            for (size_t y = 0; y < 16; y++)
+                for (size_t z = 0; z < 16; z++)
+                    segment.block[x][y][z] = AIR;
+    }
+    else
+    {
+        for (size_t x = 0; x < 16; x++)
+            for (size_t y = 0; y < 16; y++)
+                for (size_t z = 0; z < 16; z++)
+                    segment.block[x][y][z] = STONE;
+
+        if (world_y == 0)
+        {
+            for (size_t x = 0; x < 16; x++)
+                for (size_t z = 0; z < 16; z++)
+                {
+                    segment.block[x][15][z] = GRASS;
+                    segment.block[x][14][z] = DIRT;
+                    segment.block[x][13][z] = DIRT;
+                    segment.block[x][12][z] = DIRT;
+                }
+        }
+    }
+
+    return segment;
+}
+
 // NETWORK VALUES & PARAMETERS //
 
 #define NUM_OF_NODES 64
@@ -16,15 +117,11 @@ typedef struct
     double weight[NUM_OF_NODES][NUM_OF_NODES];
 } NetworkParameters;
 
-// TODO: Implement
+// SCOUT ACTIONS //
 
 typedef struct
 {
-    void *unimplemented;
-} Environment;
-
-typedef struct
-{
+    // TODO: Implement
     void *unimplemented;
 } Action;
 
@@ -64,11 +161,6 @@ typedef struct
 } Population;
 
 // UNIMPLEMENTED FUNCTIONS //
-
-void generate_environment(Environment *environment)
-{
-    // TODO: Implement
-}
 
 void set_network_inputs(NetworkValues *values, const Environment world)
 {
@@ -159,7 +251,21 @@ void iterate_training(Population *population)
     // Generate environment
     Environment environment;
     Environment copy_of_environment;
-    generate_environment(&environment);
+
+    init_environment(&environment);
+    init_environment(&copy_of_environment);
+
+    {
+        environment.capacity = 27;
+        environment.count = 27;
+        environment.segment = (Segment *)malloc(27 * sizeof(Segment));
+
+        size_t i = 0;
+        for (int world_x = -1; world_x < 1; world_x++)
+            for (int world_y = -1; world_y < 1; world_y++)
+                for (int world_z = -1; world_z < 1; world_z++)
+                    environment.segment[i++] = generate_segment(world_x, world_y, world_z);
+    }
 
     // Evaluate each scout
     NetworkValues network_values;
@@ -167,13 +273,11 @@ void iterate_training(Population *population)
     {
         NetworkParameters parameters = scout_parameters[i];
 
-        // TODO: Ensure this creates a deep copy of the environment
-        memcpy(&copy_of_environment, &environment, sizeof(Environment));
-
-        initialise_scout_stats(scout_stats + i);
-
         for (size_t i = 0; i < NUM_OF_NODES; i++)
             network_values[i] = parameters.bias[i];
+
+        copy_environment(&environment, &copy_of_environment);
+        initialise_scout_stats(scout_stats + i);
 
         for (size_t n = 0; n < 1000; n++)
         {
@@ -186,6 +290,10 @@ void iterate_training(Population *population)
             add_stats(scout_stats + i, stats_delta);
         }
     }
+
+    // FIXME: It's not worth allocating and freeing this memory on every training iteration.
+    free_environment(&environment);
+    free_environment(&copy_of_environment);
 
     // Generate novelty scores
     for (size_t i = 0; i < active_count; i++)

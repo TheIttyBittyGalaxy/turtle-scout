@@ -778,6 +778,16 @@ void iterate_training(Population *population)
         population->scout_parameters[i] = population->scout_parameters[j];
         population->scout_generation[i] = population->scout_generation[j] + 1;
         mutate_parameters(&population->scout_parameters[i]);
+
+        // NOTE: The below isn't necessary for the program to function, but it
+        // avoids confusion in the `info` command by not showing the replaced
+        // scout's data next to the new child.
+
+        // FIXME: To avoid this refactor the program so that we purge and
+        //        repopulate at the start of every iteration except the first.
+
+        init_scout_stats(population->scout_stats + i);
+        population->scout_novelty_score[i] = 0;
     }
 }
 
@@ -816,21 +826,41 @@ void save_parameters_to_lua(const NetworkParameters parameters)
 
 int main(int argc, char const *argv[])
 {
+    // Command variables
     char cmd_buffer[CMD_CHAR_LIMIT];
     char *cmd_args[8];
     size_t cmd_arg_count;
 
-    Population population;
-    population.count = 0;
-    population.active_count = 0;
-    population.capacity = 128;
-    population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * 128);
-    population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * 128);
-    population.scout_novelty_score = (double *)malloc(sizeof(double) * 128);
-    population.scout_generation = (size_t *)malloc(sizeof(size_t) * 128);
+    // TODO: Allow user to specify the seed
+    printf("Seed 42.\n");
+    srand(42);
 
+    // Initialise population
+    Population population;
+    population.count = 64;
+    population.capacity = 128;
+
+    population.active_count = population.count;
+    population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * population.capacity);
+    population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * population.capacity);
+    population.scout_novelty_score = (double *)malloc(sizeof(double) * population.capacity);
+    population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
+
+    // Generate random initial population
+    printf("Creating initial population.\n");
+    for (size_t i = 0; i < population.active_count; i++)
+    {
+        randomise_scout_parameters(population.scout_parameters + i);
+        init_scout_stats(population.scout_stats + i);
+        population.scout_novelty_score[i] = 0;
+        population.scout_generation[i] = 0;
+    }
+
+// Command loop
+#define CMD_IS(s) (strcmp(cmd_buffer, s) == 0)
     while (true)
     {
+        // Enter new command
         printf("> ");
         fgets(cmd_buffer, CMD_CHAR_LIMIT, stdin);
 
@@ -851,30 +881,19 @@ int main(int argc, char const *argv[])
 
         // COMMAND: help
         // List the commands available in this program with information about how to use them
-        if (strcmp(cmd_buffer, "help") == 0)
+        if (CMD_IS("help"))
         {
             // TODO: Write help command
-            printf("Sorry, I haven't written this yet..\n");
-        }
-
-        // COMMAND: spawn
-        // Create a new population of scouts
-        else if (strcmp(cmd_buffer, "spawn") == 0)
-        {
-            population.count = 64;
-            population.active_count = 64;
-            for (size_t i = 0; i < population.active_count; i++)
-            {
-                randomise_scout_parameters(population.scout_parameters + i);
-                init_scout_stats(population.scout_stats + i);
-                population.scout_novelty_score[i] = 0;
-                population.scout_generation[i] = 0;
-            }
+            printf("info               : List the current population of scouts.\n");
+            printf("train              : Run a training iteration.\n");
+            printf("train <iterations> : Run <iterations> training iterations.\n");
+            printf("save               : Save the most novel scout in the population.\n");
+            printf("save <scout_index> : Save the scout in <scout_index>.\n");
         }
 
         // COMMAND: train <iterations>
         // Run a learning iteration
-        else if (strcmp(cmd_buffer, "train") == 0)
+        else if (CMD_IS("train"))
         {
             if (cmd_arg_count == 0)
             {
@@ -884,7 +903,11 @@ int main(int argc, char const *argv[])
             {
                 size_t iterations = atoi(cmd_args[0]);
                 for (size_t i = 0; i < iterations; i++)
+                {
+                    printf("\rIteration %d / %d", i + 1, iterations);
                     iterate_training(&population);
+                }
+                printf("\n");
             }
             else
             {
@@ -894,7 +917,7 @@ int main(int argc, char const *argv[])
 
         // COMMAND: info
         // Get information about the current population
-        else if (strcmp(cmd_buffer, "info") == 0)
+        else if (CMD_IS("info"))
         {
             for (size_t i = 0; i < population.count; i++)
             {
@@ -916,16 +939,27 @@ int main(int argc, char const *argv[])
         }
 
         // COMMAND: save
-        // Save data from the program
-        else if (strcmp(cmd_buffer, "save") == 0)
+        // Save the parameters for a specific turtle
+        else if (CMD_IS("save"))
         {
-            // TODO: Allow this program to take sub commands so the user can decide what to save
-            save_parameters_to_lua(population.scout_parameters[0]);
+            if (cmd_arg_count == 0)
+            {
+                save_parameters_to_lua(population.scout_parameters[0]);
+            }
+            else if (cmd_arg_count == 1)
+            {
+                size_t scout_index = atoi(cmd_args[0]);
+                save_parameters_to_lua(population.scout_parameters[scout_index]);
+            }
+            else
+            {
+                printf("Usage: save <scout_index>\n");
+            }
         }
 
         // COMMAND: quit
         // Stop the program
-        else if (strcmp(cmd_buffer, "quit") == 0)
+        else if (CMD_IS("quit"))
         {
             break;
         }
@@ -934,7 +968,5 @@ int main(int argc, char const *argv[])
         {
             printf("Command not recognised.\n");
         }
-
-        printf("\n");
     }
 }

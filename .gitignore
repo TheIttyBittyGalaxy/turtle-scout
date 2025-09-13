@@ -1,5 +1,6 @@
 # Project folders
-mcfunct
+mcfunct/
+save/
 
 # Prerequisites
 *.d

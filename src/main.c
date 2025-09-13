@@ -744,7 +744,37 @@ void iterate_training(Population *population)
     }
 }
 
+// SAVE METHODS //
+
+void save_parameters_to_lua(const NetworkParameters parameters)
+{
+    FILE *f;
+    f = fopen("save/parameters.lua", "w");
+
+    fprintf(f, "local parameters = {\n\tnodes = %d,", NUM_OF_NODES);
+
+    fprintf(f, "\n\tbias = { %f", parameters.bias[0]);
+
+    for (size_t i = 1; i < NUM_OF_NODES; i++)
+        fprintf(f, ", %f", parameters.bias[i]);
+
+    fprintf(f, " },\n\tweight = {");
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+    {
+        fprintf(f, "\n\t\t{ %f", parameters.weight[i][0]);
+        for (size_t j = 1; j < NUM_OF_NODES; j++)
+            fprintf(f, ", %f", parameters.weight[i][j]);
+        fprintf(f, " },");
+    }
+
+    fprintf(f, "\n\t}\n}\n");
+
+    fclose(f);
+}
+
 // MAIN FUNCTION //
+
 #define CMD_CHAR_LIMIT 256
 
 int main(int argc, char const *argv[])
@@ -826,6 +856,14 @@ int main(int argc, char const *argv[])
                     printf("%03d   ", population.scout_stats[i].stat[s]);
                 printf("\n");
             }
+        }
+
+        // COMMAND: save
+        // Save data from the program
+        else if (strcmp(cmd_buffer, "save") == 0)
+        {
+            // TODO: Allow this program to take sub commands so the user can decide what to save
+            save_parameters_to_lua(population.scout_parameters[0]);
         }
 
         // COMMAND: quit

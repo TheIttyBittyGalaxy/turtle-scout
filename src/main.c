@@ -30,6 +30,34 @@ const char *direction_to_mc_string(Direction d)
     UNREACHABLE
 }
 
+Direction left_of(Direction d)
+{
+    return (Direction)(((int)d + 3) % 4);
+}
+
+Direction right_of(Direction d)
+{
+    return (Direction)(((int)d + 1) % 4);
+}
+
+int x_offset_of(Direction d)
+{
+    if (d == EAST)
+        return 1;
+    if (d == WEST)
+        return -1;
+    return 0;
+}
+
+int z_offset_of(Direction d)
+{
+    if (d == NORTH)
+        return -1;
+    if (d == SOUTH)
+        return 1;
+    return 0;
+}
+
 typedef enum
 {
     AIR,
@@ -153,6 +181,82 @@ void dump_environment(const Environment environment)
     fclose(f);
 }
 
+// GET BLOCKS //
+
+Block get_block(const Environment environment, int block_x, int block_y, int block_z)
+{
+    int world_x = block_x / 16;
+    int world_y = block_y / 16;
+    int world_z = block_z / 16;
+
+    Segment *segment = NULL;
+    for (size_t i = 0; i < environment.count; i++)
+    {
+        segment = environment.segment + i;
+        if (segment->world_x == world_x && segment->world_y == world_y && segment->world_z == world_z)
+            break;
+    }
+
+    if (segment == NULL)
+    {
+        // TODO: Generate this segment (and/or make this scenario impossible?)
+        return AIR;
+    }
+
+    int segment_x = block_x % 16;
+    int segment_y = block_y % 16;
+    int segment_z = block_z % 16;
+
+    return segment->block[segment_x][segment_y][segment_z];
+}
+
+Block get_block_in_front_of_scout(const Environment environment)
+{
+    int x = environment.scout_x + x_offset_of(environment.scout_facing);
+    int y = environment.scout_y;
+    int z = environment.scout_z + z_offset_of(environment.scout_facing);
+    return get_block(environment, x, y, z);
+}
+
+Block get_block_above_scout(const Environment environment)
+{
+    return get_block(environment, environment.scout_x, environment.scout_y + 1, environment.scout_z);
+}
+
+Block get_block_below_scout(const Environment environment)
+{
+    return get_block(environment, environment.scout_x, environment.scout_y - 1, environment.scout_z);
+}
+
+// SET BLOCKS //
+
+void set_block(Environment *environment, int block_x, int block_y, int block_z, Block block)
+{
+    int world_x = block_x / 16;
+    int world_y = block_y / 16;
+    int world_z = block_z / 16;
+
+    Segment *segment = NULL;
+    for (size_t i = 0; i < environment->count; i++)
+    {
+        segment = environment->segment + i;
+        if (segment->world_x == world_x && segment->world_y == world_y && segment->world_z == world_z)
+            break;
+    }
+
+    if (segment == NULL)
+    {
+        // TODO: Generate this segment (and/or make this scenario impossible?)
+        return;
+    }
+
+    int segment_x = block_x % 16;
+    int segment_y = block_y % 16;
+    int segment_z = block_z % 16;
+
+    segment->block[segment_x][segment_y][segment_z] = block;
+}
+
 // WORLD GEN //
 
 Segment generate_segment(int world_x, int world_y, int world_z)
@@ -192,6 +296,50 @@ Segment generate_segment(int world_x, int world_y, int world_z)
     return segment;
 }
 
+// ACTIONS //
+
+#define NUM_OF_ACTION 9
+
+typedef enum
+{
+    IDLE,
+
+    MOVE,
+    MOVE_UP,
+    MOVE_DOWN,
+
+    DIG,
+    DIG_UP,
+    DIG_DOWN,
+
+    TURN_LEFT,
+    TURN_RIGHT,
+} Action;
+
+bool is_move_action(Action action)
+{
+    return action == MOVE ||
+           action == MOVE_UP ||
+           action == MOVE_DOWN;
+}
+
+bool is_dig_action(Action action)
+{
+    return action == DIG ||
+           action == DIG_UP ||
+           action == DIG_DOWN;
+}
+
+bool is_up_action(Action action)
+{
+    return action == MOVE_UP || action == DIG_UP;
+}
+
+bool is_down_action(Action action)
+{
+    return action == MOVE_DOWN || action == DIG_DOWN;
+}
+
 // NETWORK VALUES & PARAMETERS //
 
 #define NUM_OF_NODES 64
@@ -227,17 +375,17 @@ void evaluate_network(const NetworkParameters parameter, NetworkValues *value)
         (*value)[i] = result[i];
 }
 
-// SCOUT ACTIONS //
-
-typedef struct
-{
-    // TODO: Implement
-    void *unimplemented;
-} Action;
-
 // STATISTICS //
 
-#define NUM_OF_STATISTICS 8
+typedef enum
+{
+    BROKE_STONE,
+    BROKE_DIRT,
+    BROKE_GRASS,
+    MOVED,
+} StatName;
+
+#define NUM_OF_STATISTICS 4
 
 typedef struct
 {
@@ -270,21 +418,125 @@ typedef struct
     size_t *scout_generation;
 } Population;
 
-// UNIMPLEMENTED FUNCTIONS //
+// PERFORM ACTIONS //
 
 void set_network_inputs(NetworkValues *values, const Environment environment)
 {
-    // TODO: Implement
+#define SET_BLOCK_INPUTS(block)              \
+    {                                        \
+        Block b = block;                     \
+        (*values)[i++] = b == STONE ? 1 : 0; \
+        (*values)[i++] = b == DIRT ? 1 : 0;  \
+        (*values)[i++] = b == GRASS ? 1 : 0; \
+    }
+
+    size_t i = 0;
+    SET_BLOCK_INPUTS(get_block_in_front_of_scout(environment));
+    SET_BLOCK_INPUTS(get_block_above_scout(environment));
+    SET_BLOCK_INPUTS(get_block_below_scout(environment));
+
+#undef SET_BLOCK_INPUT
 }
 
 Action determine_network_action(const NetworkValues network_values)
 {
-    return {}; // TODO: Implement
+    Action action = IDLE;
+    double highest_activation = 0;
+
+    for (size_t i = 1; i < NUM_OF_ACTION; i++)
+    {
+        size_t n = NUM_OF_NODES - i;
+        double activation = network_values[n];
+        if (activation > highest_activation)
+        {
+            action = (Action)i;
+            highest_activation = activation;
+        }
+    }
+
+    return action;
 }
 
-void perform_action(Environment *world, const Action action, Statistics *stats)
+void perform_action(Environment *environment, const Action action, Statistics *stats)
 {
-    // TODO: Implement
+    // IDLE
+    if (action == IDLE)
+        return;
+
+    // TURN
+    if (action == TURN_LEFT)
+    {
+        environment->scout_facing = left_of(environment->scout_facing);
+        return;
+    }
+
+    if (action == TURN_RIGHT)
+    {
+        environment->scout_facing = right_of(environment->scout_facing);
+        return;
+    }
+
+    // MOVE
+    if (is_move_action(action))
+    {
+        if (is_up_action(action) && get_block_above_scout(*environment) == AIR)
+        {
+            environment->scout_y++;
+        }
+        else if (is_down_action(action) && get_block_below_scout(*environment) == AIR)
+        {
+            environment->scout_y--;
+        }
+        else if (get_block_in_front_of_scout(*environment) == AIR)
+        {
+            environment->scout_x += x_offset_of(environment->scout_facing);
+            environment->scout_z += z_offset_of(environment->scout_facing);
+        }
+
+        return;
+    }
+
+    // DIG
+    if (is_dig_action(action))
+    {
+        Block block = AIR;
+        int x = environment->scout_x;
+        int y = environment->scout_y;
+        int z = environment->scout_z;
+
+        if (is_up_action(action))
+        {
+            block = get_block_above_scout(*environment);
+            y++;
+        }
+        else if (is_down_action(action))
+        {
+            block = get_block_below_scout(*environment);
+            y--;
+        }
+        else
+        {
+            block = get_block_in_front_of_scout(*environment);
+            x += x_offset_of(environment->scout_facing);
+            z += z_offset_of(environment->scout_facing);
+        }
+
+        if (block == AIR)
+            return;
+
+        set_block(environment, x, y, z, AIR);
+
+        if (block == STONE)
+            stats->stat[BROKE_STONE]++;
+        else if (block == DIRT)
+            stats->stat[BROKE_DIRT]++;
+        else if (block == GRASS)
+            stats->stat[BROKE_GRASS]++;
+
+        return;
+    }
+
+    UNREACHABLE;
 }
 
 // MANIPULATE NETWORK PARAMETERS //

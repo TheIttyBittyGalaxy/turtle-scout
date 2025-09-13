@@ -41,12 +41,37 @@ typedef struct
     size_t *scout_generation;
 } Population;
 
-// TODO: Implement
-void set_network_inputs(NetworkValues *values, const Environment world);
-void evaluate_network(const NetworkParameters parameters, NetworkValues *values);
-Action determine_network_action(network_values);
-void update_environment(Environment *world, const Action action, Statistics *stats_delta);
-void add_stats(Statistics *stats, const Statistics stats_delta);
+// UNIMPLEMENTED FUNCTIONS //
+
+void generate_environment(Environment *environment)
+{
+    return; // TODO: Implement
+}
+
+void set_network_inputs(NetworkValues *values, const Environment world)
+{
+    return; // TODO: Implement
+}
+
+void evaluate_network(const NetworkParameters parameters, NetworkValues *values)
+{
+    return; // TODO: Implement
+}
+
+Action determine_network_action(const NetworkValues network_values)
+{
+    return {}; // TODO: Implement
+}
+
+void update_environment(Environment *world, const Action action, Statistics *stats_delta)
+{
+    return; // TODO: Implement
+}
+
+void add_stats(Statistics *stats, const Statistics stats_delta)
+{
+    return; // TODO: Implement
+}
 
 // CALCULATE NOVELTY DISTANCE //
 

@@ -838,7 +838,6 @@ int main(int argc, char const *argv[])
         // Get information about the current population
         else if (strcmp(cmd_buffer, "info") == 0)
         {
-            population.active_count--;
             for (size_t i = 0; i < population.count; i++)
             {
                 if (i == population.active_count)

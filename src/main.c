@@ -426,12 +426,6 @@ void init_scout_stats(Statistics *scout_stats)
         scout_stats->stat[i] = 0;
 }
 
-void add_stats(Statistics *scout_stats, const Statistics stats_delta)
-{
-    for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
-        scout_stats->stat[i] += stats_delta.stat[i];
-}
-
 // SCOUT POPULATION //
 
 typedef struct
@@ -533,28 +527,25 @@ void perform_action(Environment *environment, const Action action, Statistics *s
     // DIG
     if (is_dig_action(action))
     {
-        Block block = AIR;
         int x = environment->scout_x;
         int y = environment->scout_y;
         int z = environment->scout_z;
 
         if (is_up_action(action))
         {
-            block = get_block_above_scout(*environment);
             y++;
         }
         else if (is_down_action(action))
         {
-            block = get_block_below_scout(*environment);
             y--;
         }
         else
         {
-            block = get_block_in_front_of_scout(*environment);
             x += x_offset_of(environment->scout_facing);
             z += z_offset_of(environment->scout_facing);
         }
 
+        Block block = get_block(*environment, x, y, z);
         if (block == AIR)
             return;
 

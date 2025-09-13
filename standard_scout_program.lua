@@ -24,7 +24,8 @@ for i = 1, parameters.nodes do
 end
 
 -- MAIN LOOP
-while true do
+-- while true do
+for iteration = 1, 128 do
 
     -- Set inputs
     local is_front, front = turtle.inspect()

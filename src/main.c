@@ -32,8 +32,9 @@ typedef int Statistics[NUM_OF_STATISTICS];
 // SCOUT POPULATION //
 typedef struct
 {
-    size_t count;
-    size_t capacity;
+    size_t capacity;     // Capacity of the array
+    size_t count;        // All members of the population, historic and active
+    size_t active_count; // On the active members of the population
 
     NetworkParameters *scout_parameters;
     Statistics *scout_stats;
@@ -88,7 +89,8 @@ double novelty_distance(const Statistics a, const Statistics b)
 // ITERATE TRAINING //
 void iterate_training(Population *population)
 {
-    size_t scout_count = population->count;
+    size_t population_count = population->count;
+    size_t active_count = population->active_count;
     NetworkParameters *scout_parameters = population->scout_parameters;
     Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
@@ -101,7 +103,7 @@ void iterate_training(Population *population)
 
     // Evaluate each scout
     NetworkValues network_values;
-    for (size_t i = 0; i < scout_count; i++)
+    for (size_t i = 0; i < active_count; i++)
     {
         NetworkParameters parameters = scout_parameters[i];
 
@@ -121,7 +123,7 @@ void iterate_training(Population *population)
     }
 
     // Generate novelty scores
-    for (size_t i = 0; i < scout_count; i++)
+    for (size_t i = 0; i < active_count; i++)
     {
         // Find the 8 scouts with the most similar stats and track how similar they are
         double nearest_scouts[8];
@@ -134,7 +136,7 @@ void iterate_training(Population *population)
         nearest_scouts[6] = DBL_MAX;
         nearest_scouts[7] = DBL_MAX;
 
-        for (size_t j = 0; j < scout_count; j++)
+        for (size_t j = 0; j < population_count; j++)
         {
             if (i == j)
                 continue;
@@ -166,7 +168,7 @@ void iterate_training(Population *population)
         scout_novelty_score[i] = score;
     }
 
-    // TODO: Remove half the population with a bias towards removing scouts with a low novelty score.
+    // TODO: Remove half the active population with a bias towards removing scouts with a low novelty score.
     // TODO: Repopulate by duplicating surviving members of the population and adding mutations.
 }
 
@@ -179,6 +181,7 @@ int main(int argc, char const *argv[])
 
     Population population;
     population.count = 0;
+    population.active_count = 0;
     population.capacity = 128;
     population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * 128);
     population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * 128);
@@ -226,7 +229,7 @@ int main(int argc, char const *argv[])
         else if (strcmp(cmd_buffer, "info") == 0)
         {
             printf("| ACTIVE POPULATION\n");
-            for (size_t i = 0; i < 64; i++)
+            for (size_t i = 0; i < population.active_count; i++)
             {
                 printf("%02d | %f\t%d\n",
                        i,
@@ -235,7 +238,7 @@ int main(int argc, char const *argv[])
             }
 
             printf("| HISTORIC NOVELTY\n");
-            for (size_t i = 64; i < population.count; i++)
+            for (size_t i = population.active_count; i < population.count; i++)
             {
                 printf("%02d | %f\t%d\n",
                        i,

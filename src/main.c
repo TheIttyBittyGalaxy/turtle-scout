@@ -90,6 +90,11 @@ void update_environment(Environment *world, const Action action, Statistics *sta
     // TODO: Implement
 }
 
+void mutate_parameters(NetworkParameters *parameters)
+{
+    // TODO: Implement
+}
+
 // RANDOMISE NETWORK PARAMETER
 
 double rand_param()
@@ -182,6 +187,7 @@ void iterate_training(Population *population)
                 continue;
 
             double dist = novelty_distance(scout_stats[i], scout_stats[j]);
+
             for (size_t s = 0; s < 8; s++)
             {
                 if (dist > nearest_scouts[s])
@@ -208,8 +214,41 @@ void iterate_training(Population *population)
         scout_novelty_score[i] = score;
     }
 
-    // TODO: Remove half the active population with a bias towards removing scouts with a low novelty score.
-    // TODO: Repopulate by duplicating surviving members of the population and adding mutations.
+    // Sort active population by novelty score
+    // TODO: This is bubble sort oopsie!
+    for (size_t i = 0; i < population->active_count; i++)
+    {
+        for (size_t j = i + 1; j < population->active_count; j++)
+        {
+            if (population->scout_novelty_score[i] < population->scout_novelty_score[j])
+            {
+                NetworkParameters scout_parameters = population->scout_parameters[i];
+                Statistics scout_stats = population->scout_stats[i];
+                double scout_novelty_score = population->scout_novelty_score[i];
+                size_t scout_generation = population->scout_generation[i];
+
+                population->scout_parameters[i] = population->scout_parameters[j];
+                population->scout_stats[i] = population->scout_stats[j];
+                population->scout_novelty_score[i] = population->scout_novelty_score[j];
+                population->scout_generation[i] = population->scout_generation[j];
+
+                population->scout_parameters[j] = scout_parameters;
+                population->scout_stats[j] = scout_stats;
+                population->scout_novelty_score[j] = scout_novelty_score;
+                population->scout_generation[j] = scout_generation;
+            }
+        }
+    }
+
+    // Replace the least novel half of the population with children from the most novel
+    size_t safe_count = active_count / 2;
+    for (size_t i = safe_count; i < active_count; i++)
+    {
+        size_t j = rand() % safe_count;
+        population->scout_parameters[i] = population->scout_parameters[j];
+        population->scout_generation[i] = population->scout_generation[j] + 1;
+        mutate_parameters(&population->scout_parameters[i]);
+    }
 }
 
 // MAIN FUNCTION //

@@ -811,20 +811,28 @@ int main(int argc, char const *argv[])
             printf("   | ACTIVE POPULATION\n");
             for (size_t i = 0; i < population.active_count; i++)
             {
-                printf("%02d | %f\t%d\n",
+                printf("%02d | %f\t%d\t",
                        i,
                        population.scout_novelty_score[i],
                        population.scout_generation[i]);
+
+                for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
+                    printf("%03d   ", population.scout_stats[i].stat[s]);
+                printf("\n");
             }
 
             printf("   | \n");
             printf("   | HISTORIC NOVELTY\n");
             for (size_t i = population.active_count; i < population.count; i++)
             {
-                printf("%02d | %f\t%d\n",
+                printf("%02d | %f\t%d\t",
                        i,
                        population.scout_novelty_score[i],
                        population.scout_generation[i]);
+
+                for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
+                    printf("%03d   ", population.scout_stats[i].stat[s]);
+                printf("\n");
             }
         }
 

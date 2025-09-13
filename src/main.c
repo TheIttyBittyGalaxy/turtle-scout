@@ -66,6 +66,47 @@ void copy_environment(Environment *src, Environment *dst)
         dst->segment[i] = src->segment[i];
 }
 
+void dump_environment(const Environment environment)
+{
+    FILE *f;
+    f = fopen("mcfunct/environment_dump.mcfunction", "w");
+
+    for (size_t i = 0; i < environment.count; i++)
+    {
+        Segment segment = environment.segment[i];
+        int wx = segment.world_x;
+        int wy = segment.world_y;
+        int wz = segment.world_z;
+
+        for (int sx = 0; sx < 16; sx++)
+            for (int sy = 0; sy < 16; sy++)
+                for (int sz = 0; sz < 16; sz++)
+                {
+                    Block block = segment.block[sx][sy][sz];
+                    if (block == AIR)
+                        continue;
+
+                    int x = wx * 16 + sx;
+                    int y = wy * 16 + sy;
+                    int z = wz * 16 + sz;
+                    fprintf(f, "setblock ~%d ~%d ~%d minecraft:", x, y, z);
+
+                    if (block == STONE)
+                        fprintf(f, "stone");
+                    else if (block == DIRT)
+                        fprintf(f, "dirt");
+                    else if (block == GRASS)
+                        fprintf(f, "grass_block");
+                    else
+                        fprintf(f, "bedrock");
+
+                    fprintf(f, "\n");
+                }
+    }
+
+    fclose(f);
+}
+
 // WORLD GEN //
 
 Segment generate_segment(int world_x, int world_y, int world_z)
@@ -266,6 +307,8 @@ void iterate_training(Population *population)
                 for (int world_z = -1; world_z < 1; world_z++)
                     environment.segment[i++] = generate_segment(world_x, world_y, world_z);
     }
+
+    dump_environment(environment);
 
     // Evaluate each scout
     NetworkValues network_values;

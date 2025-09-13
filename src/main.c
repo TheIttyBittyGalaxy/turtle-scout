@@ -344,7 +344,7 @@ bool is_down_action(Action action)
 
 #define NUM_OF_NODES 64
 
-typedef int NetworkValues[NUM_OF_NODES];
+typedef double NetworkValues[NUM_OF_NODES];
 
 typedef struct
 {

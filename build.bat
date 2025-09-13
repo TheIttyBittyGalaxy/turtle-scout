@@ -1,1 +1,1 @@
-g++ -o scout src/*.c -Wuninitialized
+g++ -o scout src/*.c -g -Wuninitialized 

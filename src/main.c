@@ -4,7 +4,31 @@
 #include <stdio.h>
 #include <string.h>
 
+#define UNREACHABLE __builtin_unreachable();
+
 // ENVIRONMENTS //
+
+typedef enum
+{
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST
+} Direction;
+
+const char *direction_to_mc_string(Direction d)
+{
+    if (d == NORTH)
+        return "north";
+    if (d == EAST)
+        return "east";
+    if (d == SOUTH)
+        return "south";
+    if (d == WEST)
+        return "west";
+
+    UNREACHABLE
+}
 
 typedef enum
 {
@@ -24,6 +48,11 @@ typedef struct
 
 typedef struct
 {
+    int scout_x;
+    int scout_y;
+    int scout_z;
+    Direction scout_facing;
+
     size_t count;
     size_t capacity;
 
@@ -35,6 +64,11 @@ typedef struct
 
 void init_environment(Environment *environment)
 {
+    environment->scout_x = 0;
+    environment->scout_y = 0;
+    environment->scout_z = 0;
+    environment->scout_facing = NORTH;
+
     environment->count = 0;
     environment->capacity = 0;
     environment->segment = NULL;
@@ -48,8 +82,14 @@ void free_environment(Environment *environment)
         free(environment->segment);
 }
 
+// FIXME: Change src to a const
 void copy_environment(Environment *src, Environment *dst)
 {
+    dst->scout_x = src->scout_x;
+    dst->scout_y = src->scout_y;
+    dst->scout_z = src->scout_z;
+    dst->scout_facing = src->scout_facing;
+
     if (dst->capacity == 0)
     {
         dst->capacity = src->capacity;
@@ -71,6 +111,12 @@ void dump_environment(const Environment environment)
     FILE *f;
     f = fopen("mcfunct/environment_dump.mcfunction", "w");
 
+    // Turtle (without program, just for reference)
+    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout_x, environment.scout_y, environment.scout_z);
+    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout_facing));
+    fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
+
+    // Blocks in each segment
     for (size_t i = 0; i < environment.count; i++)
     {
         Segment segment = environment.segment[i];
@@ -220,7 +266,7 @@ typedef struct
 
 // UNIMPLEMENTED FUNCTIONS //
 
-void set_network_inputs(NetworkValues *values, const Environment world)
+void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     // TODO: Implement
 }
@@ -309,6 +355,11 @@ void iterate_training(Population *population)
     init_environment(&copy_of_environment);
 
     {
+        environment.scout_x = 0;
+        environment.scout_y = 16;
+        environment.scout_z = 0;
+        environment.scout_facing = EAST;
+
         environment.capacity = 27;
         environment.count = 27;
         environment.segment = (Segment *)malloc(27 * sizeof(Segment));

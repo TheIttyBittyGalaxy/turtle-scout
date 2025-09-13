@@ -155,8 +155,25 @@ typedef int NetworkValues[NUM_OF_NODES];
 typedef struct
 {
     double bias[NUM_OF_NODES];
-    double weight[NUM_OF_NODES][NUM_OF_NODES];
+    double weight[NUM_OF_NODES][NUM_OF_NODES]; // weight[a][b] is connection from a to b
 } NetworkParameters;
+
+// EVALUATE NETWORK //
+
+void evaluate_network(const NetworkParameters parameter, NetworkValues *value)
+{
+    NetworkValues result;
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+    {
+        result[i] = parameter.bias[i];
+        for (size_t j = 0; j < NUM_OF_NODES; j++)
+            result[i] += (*value)[j] * parameter.weight[j][i];
+    }
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        (*value)[i] = result[i];
+}
 
 // SCOUT ACTIONS //
 
@@ -204,11 +221,6 @@ typedef struct
 // UNIMPLEMENTED FUNCTIONS //
 
 void set_network_inputs(NetworkValues *values, const Environment world)
-{
-    // TODO: Implement
-}
-
-void evaluate_network(const NetworkParameters parameters, NetworkValues *values)
 {
     // TODO: Implement
 }

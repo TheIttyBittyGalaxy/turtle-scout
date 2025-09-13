@@ -32,18 +32,21 @@ typedef struct
 
 #define NUM_OF_STATISTICS 8
 
-typedef int Statistics[NUM_OF_STATISTICS];
+typedef struct
+{
+    int stat[NUM_OF_STATISTICS];
+} Statistics;
 
-void initialise_scout_stats(Statistics *stats)
+void initialise_scout_stats(Statistics *scout_stats)
 {
     for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
-        (*stats)[i] = 0;
+        scout_stats->stat[i] = 0;
 }
 
-void add_stats(Statistics *stats, const Statistics stats_delta)
+void add_stats(Statistics *scout_stats, const Statistics stats_delta)
 {
     for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
-        (*stats)[i] += stats_delta[i];
+        scout_stats->stat[i] += stats_delta.stat[i];
 }
 
 // SCOUT POPULATION //
@@ -114,7 +117,7 @@ double novelty_distance(const Statistics a, const Statistics b)
 {
     double score = 0;
     for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
-        score += abs(a[i] - b[i]);
+        score += abs(a.stat[i] - b.stat[i]);
     return score;
 }
 

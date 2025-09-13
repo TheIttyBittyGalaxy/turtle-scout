@@ -1,7 +1,8 @@
 #include <float.h>
-#include <stdlib.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define UNREACHABLE __builtin_unreachable();
@@ -618,13 +619,22 @@ void mutate_parameters(NetworkParameters *parameters)
 
 // CALCULATE NOVELTY DISTANCE //
 
-// NOTE: In the interests of speed, I'm using taxi-cab distance here (i.e. I'm not square rooting anything)
+// TODO: Is there any way to reason about whether to use log(x+1) or sqrt(x) to implement
+//       diminishing returns? Which would be "better" to use? Loose testing suggests
+//       log more aggressively punishes scouts that repeat the same action many times?
+
+// NOTE: In the interests of speed, I'm using taxi-cab distance here.
+//       i.e. I'm not square rooting the difference between each scout.
 //       For this purpose, I think that's fine?
 double novelty_distance(const Statistics a, const Statistics b)
 {
     double score = 0;
     for (size_t i = 0; i < NUM_OF_STATISTICS; i++)
-        score += abs(a.stat[i] - b.stat[i]);
+    {
+        double diminished_a = sqrt(a.stat[i]);
+        double diminished_b = sqrt(b.stat[i]);
+        score += abs(diminished_a - diminished_b);
+    }
     return score;
 }
 

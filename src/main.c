@@ -302,9 +302,9 @@ void iterate_training(Population *population)
         environment.segment = (Segment *)malloc(27 * sizeof(Segment));
 
         size_t i = 0;
-        for (int world_x = -1; world_x < 1; world_x++)
-            for (int world_y = -1; world_y < 1; world_y++)
-                for (int world_z = -1; world_z < 1; world_z++)
+        for (int world_x = -1; world_x <= 1; world_x++)
+            for (int world_y = -1; world_y <= 1; world_y++)
+                for (int world_z = -1; world_z <= 1; world_z++)
                     environment.segment[i++] = generate_segment(world_x, world_y, world_z);
     }
 

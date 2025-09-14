@@ -3,17 +3,12 @@
 local blocks = {
     {
         name = "stone",
-        drops = "cobblestone",
-    },
-    {
-        name = "cobblestone",
     },
     {
         name = "dirt",
     },
     {
         name = "grass",
-        drops = "dirt",
     },
 }
 
@@ -23,57 +18,65 @@ local block_map = {}
 
 for i, block in ipairs(blocks) do
     block.id = i
-    block.enum = "BLOCK_" .. block.name:upper()
+    block.enum = block.name:upper()
     block.stat_enum = "COLLECT_" .. block.name:upper()
 
     block_map[block.name] = block
 end
 
--- GENERATE CODE --
+-- UTIL --
 
-local file = io.open("src/AUTO.c", "w")
+local function open(path)
+    local file = io.open("src/" .. path, "w")
+    if not file then
+        error("Could not open src/" .. path .. " for writing.")
+    end
 
-if not file then
-    error("Could not open src/AUTO.c for writing.")
+    file:write("// This file was generated automatically by generate.lua\n\n")
+
+    if (path:sub(-1) == "h") then
+        file:write("#pragma once\n")
+        file:write("#include \"core.h\"\n\n")
+    else
+        file:write("#include \"" .. path:sub(0, -3) .. ".h\"\n\n")
+    end
+
+    return file
 end
 
-local function out(...)
-    file:write(...)
-end
+-- GENERATE block.h --
 
-out("// This file is generated automatically by generate.lua\n\n")
+local f = open("block.h")
 
--- NUM_OF_BLOCK
--- TODO: +1 to include AIR?
-out("#define NUM_OF_BLOCK ", #blocks, "\n\n")
-
--- Block enum
-out("typedef enum {")
+f:write("typedef enum\n{")
+f:write("\n    AIR,")
 for _, block in ipairs(blocks) do
-    out("\n\t", block.enum, ",")
+    f:write("\n    ", block.enum, ",")
 end
-out("\n\tBLOCK_AIR")
-out("\n} Block;\n\n")
+f:write("\n} Block;\n\n")
+
+f:write("const char* block_to_string(Block b);\n")
+f:write("const char* block_to_mc(Block b);\n")
+
+f:close()
+
+-- GENERATE block.h --
+
+local f = open("block.c")
 
 -- Enum to string
-out("const char* block_to_string(Block b) {\n")
-out("\tif (b == BLOCK_AIR) return \"air\";\n")
+f:write("const char* block_to_string(Block b) {\n")
+f:write("    if (b == AIR) return \"AIR\";\n")
 for _, block in ipairs(blocks) do
-    out("\tif (b == ", block.enum, ") return \"", block.name, "\";\n")
+    f:write("    if (b == ", block.enum, ") return \"", block.enum, "\";\n")
 end
-out("}\n\n")
+f:write("}\n\n")
 
--- Update stat on dig
-out("void update_stat_on_dig(Statistics* stats, Block b) {\n")
-out("\tif (b == BLOCK_AIR) return;\n")
+f:write("const char* block_to_mc(Block b) {\n")
+f:write("    if (b == AIR) return \"minecraft:air\";\n")
 for _, block in ipairs(blocks) do
-    if block.drops then
-        local drops = block_map[block.drops]
-        out("\telse if (b == ", block.enum, ") stats->stat[", drops.stat_enum, "]++;\n")
-    else
-        out("\telse if (b == ", block.enum, ") stats->stat[", block.stat_enum, "]++;\n")
-    end
+    f:write("    if (b == ", block.enum, ") return \"minecraft:", block.name, "\";\n")
 end
-out("}\n\n")
+f:write("}\n\n")
 
-file:close()
+f:close()

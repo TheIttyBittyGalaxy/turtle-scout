@@ -194,7 +194,7 @@ double novelty_distance(const Statistics a, const Statistics b)
 
 // SIMULATE SCOUT //
 
-FILE *simulation_log;
+FILE *simulation_log = NULL;
 
 NetworkValues simulation_network_values;
 Environment simulation_environment;
@@ -203,11 +203,6 @@ size_t simulation_iteration;
 
 void initialise_simulation(const Network network, const Environment environment)
 {
-    if (simulation_log != NULL)
-        fclose(simulation_log);
-
-    simulation_log = fopen("save/log.csv", "w");
-
     reset_network_values(network, &simulation_network_values);
     copy_environment(environment, &simulation_environment);
     init_scout_stats(&simulation_statistics);
@@ -221,6 +216,22 @@ inline void iterate_simulation(const Network network)
     Action action = determine_network_action(simulation_network_values);
     perform_action(&simulation_environment, action, &simulation_statistics);
     simulation_iteration++;
+}
+
+void close_simulation_log()
+{
+    if (simulation_log == NULL)
+        return;
+
+    fclose(simulation_log);
+}
+
+void open_simulation_log()
+{
+    if (simulation_log != NULL)
+        close_simulation_log();
+
+    simulation_log = fopen("save/simulation_log.csv", "w");
 }
 
 inline void iterate_simulation_and_log(const Network network)
@@ -374,10 +385,6 @@ void iterate_training(Population *population)
 
 int main(int argc, char const *argv[])
 {
-
-    // Simulation
-    simulation_log = NULL;
-
     // TODO: Allow user to specify the seed
     printf("Seed 42.\n");
     srand(42);
@@ -520,8 +527,10 @@ int main(int argc, char const *argv[])
                         continue;
 
                     initialise_simulation(population.scout_network[i], standard_environment);
+                    open_simulation_log();
                     for (size_t n = 0; n < 128; n++)
                         iterate_simulation_and_log(population.scout_network[i]);
+                    close_simulation_log();
 
                     found_scout = true;
                     break;
@@ -624,7 +633,4 @@ int main(int argc, char const *argv[])
             printf("Command not recognised.\n");
         }
     }
-
-    if (simulation_log != NULL)
-        fclose(simulation_log);
 }

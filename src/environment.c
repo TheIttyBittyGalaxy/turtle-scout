@@ -20,28 +20,27 @@ void free_environment(Environment *environment)
         free(environment->segment);
 }
 
-// FIXME: Change src to a const
-void copy_environment(Environment *src, Environment *dst)
+void copy_environment(const Environment src, Environment *dst)
 {
-    dst->scout.x = src->scout.x;
-    dst->scout.y = src->scout.y;
-    dst->scout.z = src->scout.z;
-    dst->scout.facing = src->scout.facing;
+    dst->scout.x = src.scout.x;
+    dst->scout.y = src.scout.y;
+    dst->scout.z = src.scout.z;
+    dst->scout.facing = src.scout.facing;
 
     if (dst->capacity == 0)
     {
-        dst->capacity = src->capacity;
+        dst->capacity = src.capacity;
         dst->segment = (Segment *)malloc(dst->capacity * sizeof(Segment));
     }
-    else if (dst->capacity < src->capacity)
+    else if (dst->capacity < src.capacity)
     {
-        dst->capacity = src->capacity;
+        dst->capacity = src.capacity;
         dst->segment = (Segment *)realloc(dst->segment, dst->capacity * sizeof(Segment));
     }
 
-    dst->count = src->count;
-    for (size_t i = 0; i < src->count; i++)
-        dst->segment[i] = src->segment[i];
+    dst->count = src.count;
+    for (size_t i = 0; i < src.count; i++)
+        dst->segment[i] = src.segment[i];
 }
 
 void dump_environment(const Environment environment)

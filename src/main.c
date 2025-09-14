@@ -247,7 +247,7 @@ void iterate_training(Population *population)
 
         reset_network_values(network, &network_values);
         init_scout_stats(scout_stats + i);
-        copy_environment(&environment, &copy_of_environment);
+        copy_environment(environment, &copy_of_environment);
 
         for (size_t n = 0; n < 128; n++)
         {

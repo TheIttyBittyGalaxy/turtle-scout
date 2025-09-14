@@ -35,7 +35,7 @@ typedef struct
 
 void init_environment(Environment *environment);
 void free_environment(Environment *environment);
-void copy_environment(Environment *src, Environment *dst);
+void copy_environment(const Environment src, Environment *dst);
 void dump_environment(const Environment environment);
 
 Block get_block(const Environment environment, int block_x, int block_y, int block_z);

@@ -1,5 +1,9 @@
+// This file was generated automatically by generate.lua
+
 #pragma once
 #include "core.h"
+
+#define NUM_OF_STATISTICS 4
 
 typedef enum
 {
@@ -8,8 +12,6 @@ typedef enum
     BROKE_GRASS,
     MOVED,
 } StatName;
-
-#define NUM_OF_STATISTICS 4
 
 typedef struct
 {

@@ -80,6 +80,26 @@ f:write("    UNREACHABLE;\n}\n\n")
 
 f:close()
 
+-- GENERATE statistics.h --
+local f = open("statistics.h")
+
+f:write("#define NUM_OF_STATISTICS ", #blocks + 1, "\n\n")
+
+f:write("typedef enum\n{\n")
+for _, block in ipairs(blocks) do
+    f:write("    BROKE_", block.enum, ",\n")
+end
+f:write("    MOVED,\n")
+f:write("} StatName;\n\n")
+
+f:write("typedef struct\n{\n")
+f:write("    int stat[NUM_OF_STATISTICS];\n")
+f:write("} Statistics;\n\n")
+
+f:write("void init_scout_stats(Statistics *scout_stats);\n")
+
+f:close()
+
 -- GENERATE generated.h --
 local f = open("generated.h")
 

@@ -87,18 +87,18 @@ void dump_network_to_lua(const Network network)
 
     fprintf(f, "local parameters = {\n\tnodes = %d,", NUM_OF_NODES);
 
-    fprintf(f, "\n\tbias = { %f", network.bias[0]);
+    fprintf(f, "\n\tbias = { %e", network.bias[0]);
 
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(f, ", %f", network.bias[i]);
+        fprintf(f, ", %e", network.bias[i]);
 
     fprintf(f, " },\n\tweight = {");
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
     {
-        fprintf(f, "\n\t\t{ %f", network.weight[i][0]);
+        fprintf(f, "\n\t\t{ %e", network.weight[i][0]);
         for (size_t j = 1; j < NUM_OF_NODES; j++)
-            fprintf(f, ", %f", network.weight[i][j]);
+            fprintf(f, ", %e", network.weight[i][j]);
         fprintf(f, " },");
     }
 

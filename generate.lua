@@ -12,6 +12,13 @@ local blocks = {
     },
 }
 
+-- GENERATE EXTRA DATA --
+
+for i, block in ipairs(blocks) do
+    block.id = i
+    block.enum = block.name:upper()
+end
+
 -- UTIL --
 
 local function open(path)

@@ -22,3 +22,4 @@ typedef struct
 } Statistics;
 
 void init_scout_stats(Statistics *scout_stats);
+const char* stat_name_to_string(StatName name);

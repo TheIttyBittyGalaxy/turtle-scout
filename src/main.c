@@ -431,6 +431,7 @@ int main(int argc, char const *argv[])
         {
             // TODO: Write help command
             printf("info               : List the current population of scouts.\n");
+            printf("info <scout_id>    : List the stats of the scout with ID <scout_id>.\n");
             printf("train              : Run a training iteration.\n");
             printf("train <iterations> : Run <iterations> training iterations.\n");
             printf("save <scout_id>    : Save the scout with ID <scout_id>.\n");
@@ -464,22 +465,48 @@ int main(int argc, char const *argv[])
         // Get information about the current population
         else if (CMD_IS("info"))
         {
-            for (size_t i = 0; i < population.count; i++)
+            if (cmd_arg_count == 0)
             {
-                if (i == population.active_count)
+                printf("Rank |   ID | Score    | Gen\n");
+                printf("---- | ---- | -------- | ---\n");
+                for (size_t i = 0; i < population.count; i++)
                 {
-                    printf("   | \n");
-                    printf("   | HISTORIC NOVELTY\n");
+                    if (i == population.active_count)
+                    {
+                        printf("   |\n");
+                        printf("   | HISTORIC NOVELTY\n");
+                    }
+
+                    printf("%4d | %4d | %f | %3d\n",
+                           i,
+                           population.scout_id[i],
+                           population.scout_novelty_score[i],
+                           population.scout_generation[i]);
+                }
+            }
+            else if (cmd_arg_count == 1)
+            {
+                size_t scout_id = atoi(cmd_args[0]);
+                bool found_scout = false;
+                for (size_t i = 0; i < population.count; i++)
+                {
+                    if (population.scout_id[i] != scout_id)
+                        continue;
+
+                    for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
+                        printf("%4d  %s\n", population.scout_stats[i].stat[s], stat_name_to_string((StatName)s));
+
+                    found_scout = true;
+                    break;
                 }
 
-                printf("%02d | %f\t%d\t",
-                       population.scout_id[i],
-                       population.scout_novelty_score[i],
-                       population.scout_generation[i]);
-
-                for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
-                    printf("%03d   ", population.scout_stats[i].stat[s]);
-                printf("\n");
+                if (!found_scout)
+                    printf("There is no scout in the population with ID %d.\n", scout_id);
+            }
+            else
+            {
+                printf("Usage: info\n");
+                printf("       info <scout_id>\n");
             }
         }
 
@@ -493,12 +520,12 @@ int main(int argc, char const *argv[])
                 bool found_scout = false;
                 for (size_t i = 0; i < population.count; i++)
                 {
-                    if (population.scout_id[i] == scout_id)
-                    {
-                        dump_network_to_lua(population.scout_network[i]);
-                        found_scout = true;
-                        break;
-                    }
+                    if (population.scout_id[i] != scout_id)
+                        continue;
+
+                    dump_network_to_lua(population.scout_network[i]);
+                    found_scout = true;
+                    break;
                 }
 
                 if (!found_scout)

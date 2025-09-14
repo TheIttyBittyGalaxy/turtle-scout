@@ -98,6 +98,25 @@ f:write("    int stat[NUM_OF_STATISTICS];\n")
 f:write("} Statistics;\n\n")
 
 f:write("void init_scout_stats(Statistics *scout_stats);\n")
+f:write("const char* stat_name_to_string(StatName name);\n")
+
+f:close()
+
+-- GENERATE statistics.c --
+local f = open("statistics.c")
+
+f:write("void init_scout_stats(Statistics *scout_stats)\n")
+f:write("{\n")
+f:write("    for (size_t i = 0; i < NUM_OF_STATISTICS; i++)\n")
+f:write("        scout_stats->stat[i] = 0;\n")
+f:write("}\n\n")
+
+f:write("const char* stat_name_to_string(StatName name) {\n")
+for _, block in ipairs(blocks) do
+    f:write("    if (name == BROKE_", block.enum, ") return \"BROKE_", block.enum, "\";\n")
+end
+f:write("    if (name == MOVED) return \"MOVED\";\n")
+f:write("    UNREACHABLE;\n}\n\n")
 
 f:close()
 

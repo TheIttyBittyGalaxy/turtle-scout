@@ -192,27 +192,26 @@ double novelty_distance(const Statistics a, const Statistics b)
 
 // SIMULATE SCOUT //
 
+NetworkValues simulation_network_values;
 Environment simulation_environment;
+Statistics simulation_statistics;
+size_t simulation_iteration;
 
-Statistics simulate_scout(const Network network, const Environment environment)
+void initialise_simulation(const Network network, const Environment environment)
 {
-    Statistics stats;
-    init_scout_stats(&stats);
-
-    NetworkValues network_values;
-    reset_network_values(network, &network_values);
-
+    reset_network_values(network, &simulation_network_values);
     copy_environment(environment, &simulation_environment);
+    init_scout_stats(&simulation_statistics);
+    simulation_iteration = 0;
+}
 
-    for (size_t n = 0; n < 128; n++)
-    {
-        set_network_inputs(&network_values, simulation_environment);
-        evaluate_network_values(network, &network_values);
-        Action action = determine_network_action(network_values);
-        perform_action(&simulation_environment, action, &stats);
-    }
-
-    return stats;
+inline void iterate_simulation(const Network network)
+{
+    set_network_inputs(&simulation_network_values, simulation_environment);
+    evaluate_network_values(network, &simulation_network_values);
+    Action action = determine_network_action(simulation_network_values);
+    perform_action(&simulation_environment, action, &simulation_statistics);
+    simulation_iteration++;
 }
 
 // ITERATE TRAINING //
@@ -266,8 +265,10 @@ void iterate_training(Population *population)
     // Evaluate each scout
     for (size_t i = 0; i < active_count; i++)
     {
-        Statistics stats = simulate_scout(scout_network[i], environment);
-        scout_stats[i] = stats;
+        initialise_simulation(scout_network[i], environment);
+        for (size_t n = 0; n < 128; n++)
+            iterate_simulation(scout_network[i]);
+        scout_stats[i] = simulation_statistics;
     }
 
     // FIXME: It's not worth allocating and freeing this memory on every training iteration.

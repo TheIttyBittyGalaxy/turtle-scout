@@ -3,7 +3,7 @@
 int mod(int a, int b)
 {
     int r = a % b;
-    return r > 0 ? r : r + b;
+    return r >= 0 ? r : r + b;
 }
 
 // Generates a random number from -1 to 1, with a bias towards 0

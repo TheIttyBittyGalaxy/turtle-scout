@@ -159,14 +159,7 @@ void perform_action(Environment *environment, const Action action, Statistics *s
             return;
 
         set_block(environment, x, y, z, AIR);
-
-        if (block == STONE)
-            stats->stat[BROKE_STONE]++;
-        else if (block == DIRT)
-            stats->stat[BROKE_DIRT]++;
-        else if (block == GRASS)
-            stats->stat[BROKE_GRASS]++;
-
+        perform_dig_action(environment, stats, block);
         return;
     }
 

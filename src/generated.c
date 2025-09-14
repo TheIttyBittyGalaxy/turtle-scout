@@ -10,3 +10,11 @@ size_t set_network_block_inputs(NetworkValues *values, const Environment environ
     return next_node;
 }
 
+void perform_dig_action(Environment* environment, Statistics* stats, Block block)
+{
+    if (block == AIR) return;
+    else if (block == STONE) stats->stat[BROKE_STONE]++;
+    else if (block == DIRT) stats->stat[BROKE_DIRT]++;
+    else if (block == GRASS) stats->stat[BROKE_GRASS]++;
+}
+

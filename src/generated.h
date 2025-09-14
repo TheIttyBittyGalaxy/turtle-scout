@@ -6,5 +6,7 @@
 #include "block.h"
 #include "environment.h"
 #include "network.h"
+#include "statistics.h"
 
 size_t set_network_block_inputs(NetworkValues *values, const Environment environment, size_t next_node, Block block);
+void perform_dig_action(Environment* environment, Statistics* stats, Block block);

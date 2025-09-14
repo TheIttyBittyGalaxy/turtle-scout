@@ -190,7 +190,33 @@ double novelty_distance(const Statistics a, const Statistics b)
     return score;
 }
 
+// SIMULATE SCOUT //
+
+Environment simulation_environment;
+
+Statistics simulate_scout(const Network network, const Environment environment)
+{
+    Statistics stats;
+    init_scout_stats(&stats);
+
+    NetworkValues network_values;
+    reset_network_values(network, &network_values);
+
+    copy_environment(environment, &simulation_environment);
+
+    for (size_t n = 0; n < 128; n++)
+    {
+        set_network_inputs(&network_values, simulation_environment);
+        evaluate_network_values(network, &network_values);
+        Action action = determine_network_action(network_values);
+        perform_action(&simulation_environment, action, &stats);
+    }
+
+    return stats;
+}
+
 // ITERATE TRAINING //
+
 void iterate_training(Population *population)
 {
     size_t population_count = population->count;
@@ -204,10 +230,7 @@ void iterate_training(Population *population)
 
     // Generate environment
     Environment environment;
-    Environment copy_of_environment;
-
     init_environment(&environment);
-    init_environment(&copy_of_environment);
 
     {
         environment.scout.x = 0;
@@ -243,25 +266,12 @@ void iterate_training(Population *population)
     // Evaluate each scout
     for (size_t i = 0; i < active_count; i++)
     {
-        NetworkValues network_values;
-        Network network = scout_network[i];
-
-        reset_network_values(network, &network_values);
-        init_scout_stats(scout_stats + i);
-        copy_environment(environment, &copy_of_environment);
-
-        for (size_t n = 0; n < 128; n++)
-        {
-            set_network_inputs(&network_values, copy_of_environment);
-            evaluate_network_values(network, &network_values);
-            Action action = determine_network_action(network_values);
-            perform_action(&copy_of_environment, action, scout_stats + i);
-        }
+        Statistics stats = simulate_scout(scout_network[i], environment);
+        scout_stats[i] = stats;
     }
 
     // FIXME: It's not worth allocating and freeing this memory on every training iteration.
     free_environment(&environment);
-    free_environment(&copy_of_environment);
 
     // Generate novelty scores
     for (size_t i = 0; i < active_count; i++)
@@ -338,6 +348,9 @@ void iterate_training(Population *population)
             }
         }
     }
+
+    // TODO: Add scouts with a particularly high novelty into the historic population
+    // NOTE: I'm not sure the best way to go about this, consult with the paper!
 
     // Replace the least novel half of the population with children from the most novel
     size_t safe_count = active_count / 2;

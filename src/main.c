@@ -213,6 +213,14 @@ void initialise_simulation(const Network network, const Environment environment)
     copy_environment(environment, &simulation_environment);
     init_scout_stats(&simulation_statistics);
     simulation_iteration = 0;
+
+#ifdef LOG_NETWORK
+    fprintf(network_log, "I,");
+    fprintf(network_log, "%f", simulation_network_values[0]);
+    for (size_t i = 1; i < NUM_OF_NODES; i++)
+        fprintf(network_log, ",%f", simulation_network_values[i]);
+    fprintf(network_log, "\n");
+#endif
 }
 
 inline void iterate_simulation(const Network network)
@@ -245,11 +253,6 @@ void open_simulation_log()
 
 #ifdef LOG_NETWORK
     network_log = fopen("save/network_log.csv", "w");
-
-    fprintf(network_log, "%f", simulation_network_values[0]);
-    for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%f", simulation_network_values[i]);
-    fprintf(network_log, "\n");
 #endif
 }
 
@@ -273,6 +276,7 @@ inline void iterate_simulation_and_log(const Network network)
             action_as_string(action));
 
 #ifdef LOG_NETWORK
+    fprintf(network_log, "%d,", simulation_iteration);
     fprintf(network_log, "%f", simulation_network_values[0]);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
         fprintf(network_log, ",%f", simulation_network_values[i]);
@@ -552,8 +556,8 @@ int main(int argc, char const *argv[])
                     if (population.scout_id[i] != scout_id)
                         continue;
 
-                    initialise_simulation(population.scout_network[i], standard_environment);
                     open_simulation_log();
+                    initialise_simulation(population.scout_network[i], standard_environment);
 
                     for (size_t n = 0; n < 128; n++)
                         iterate_simulation_and_log(population.scout_network[i]);
@@ -606,6 +610,8 @@ int main(int argc, char const *argv[])
 
                     for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
                         printf("%4d  %s\n", population.scout_stats[i].stat[s], stat_name_to_string((StatName)s));
+
+                    printf("%f\n", population.scout_network[i].bias[0]);
 
                     found_scout = true;
                     break;

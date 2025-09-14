@@ -34,7 +34,7 @@ Segment generate_segment(int world_x, int world_y, int world_z)
             for (size_t x = 0; x < 16; x++)
                 for (size_t z = 0; z < 16; z++)
                 {
-                    segment.block[x][15][z] = GRASS;
+                    segment.block[x][15][z] = GRASS_BLOCK;
                     segment.block[x][14][z] = DIRT;
                     segment.block[x][13][z] = DIRT;
                     segment.block[x][12][z] = DIRT;
@@ -219,6 +219,18 @@ void iterate_training(Population *population)
             for (int world_y = -1; world_y <= 1; world_y++)
                 for (int world_z = -1; world_z <= 1; world_z++)
                     environment.segment[i++] = generate_segment(world_x, world_y, world_z);
+
+        for (int y = 16; y <= 22; y++)
+        {
+            set_block(&environment, 1, y, 0, OAK_LOG);
+            if (y > 17)
+            {
+                set_block(&environment, 2, y, 0, OAK_LEAVES);
+                set_block(&environment, 0, y, 0, OAK_LEAVES);
+                set_block(&environment, 1, y, 1, OAK_LEAVES);
+                set_block(&environment, 1, y, -1, OAK_LEAVES);
+            }
+        }
     }
 
     dump_environment(environment);

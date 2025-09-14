@@ -8,14 +8,20 @@ local blocks = {
         name = "dirt",
     },
     {
-        name = "grass",
+        name = "grass_block",
     },
+    {
+        name = "oak_log",
+    },
+    {
+        name = "oak_leaves",
+    }
 }
 
 -- GENERATE EXTRA DATA --
 
 for i, block in ipairs(blocks) do
-    block.id = i
+    block.id = i -- 0 is reserved for AIR
     block.enum = block.name:upper()
 end
 
@@ -84,7 +90,7 @@ f:write("typedef enum\n{\n")
 for _, block in ipairs(blocks) do
     f:write("    BROKE_", block.enum, ",\n")
 end
-f:write("    MOVED,\n")
+f:write("\n    MOVED,\n")
 f:write("} StatName;\n\n")
 
 f:write("typedef struct\n{\n")

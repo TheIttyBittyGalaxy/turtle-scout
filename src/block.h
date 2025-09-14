@@ -8,7 +8,9 @@ typedef enum
     AIR,
     STONE,
     DIRT,
-    GRASS,
+    GRASS_BLOCK,
+    OAK_LOG,
+    OAK_LEAVES,
 } Block;
 
 const char* block_to_string(Block b);

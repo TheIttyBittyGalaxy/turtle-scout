@@ -3,13 +3,16 @@
 #pragma once
 #include "core.h"
 
-#define NUM_OF_STATISTICS 4
+#define NUM_OF_STATISTICS 6
 
 typedef enum
 {
     BROKE_STONE,
     BROKE_DIRT,
-    BROKE_GRASS,
+    BROKE_GRASS_BLOCK,
+    BROKE_OAK_LOG,
+    BROKE_OAK_LEAVES,
+
     MOVED,
 } StatName;
 

@@ -53,7 +53,7 @@ typedef struct
     size_t count;        // All members of the population, historic and active
     size_t active_count; // On the active members of the population
 
-    NetworkParameters *scout_parameters;
+    Network *scout_network;
     Statistics *scout_stats;
     double *scout_novelty_score;
     size_t *scout_generation;
@@ -209,7 +209,7 @@ void iterate_training(Population *population)
 {
     size_t population_count = population->count;
     size_t active_count = population->active_count;
-    NetworkParameters *scout_parameters = population->scout_parameters;
+    Network *scout_network = population->scout_network;
     Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
     size_t *scout_generation = population->scout_generation;
@@ -244,16 +244,16 @@ void iterate_training(Population *population)
     for (size_t i = 0; i < active_count; i++)
     {
         NetworkValues network_values;
-        NetworkParameters parameters = scout_parameters[i];
+        Network network = scout_network[i];
 
-        reset_network_values(&network_values, parameters);
+        reset_network_values(network, &network_values);
         init_scout_stats(scout_stats + i);
         copy_environment(&environment, &copy_of_environment);
 
         for (size_t n = 0; n < 128; n++)
         {
             set_network_inputs(&network_values, copy_of_environment);
-            evaluate_network(parameters, &network_values);
+            evaluate_network_values(network, &network_values);
             Action action = determine_network_action(network_values);
             perform_action(&copy_of_environment, action, scout_stats + i);
         }
@@ -318,17 +318,17 @@ void iterate_training(Population *population)
         {
             if (population->scout_novelty_score[i] < population->scout_novelty_score[j])
             {
-                NetworkParameters scout_parameters = population->scout_parameters[i];
+                Network scout_network = population->scout_network[i];
                 Statistics scout_stats = population->scout_stats[i];
                 double scout_novelty_score = population->scout_novelty_score[i];
                 size_t scout_generation = population->scout_generation[i];
 
-                population->scout_parameters[i] = population->scout_parameters[j];
+                population->scout_network[i] = population->scout_network[j];
                 population->scout_stats[i] = population->scout_stats[j];
                 population->scout_novelty_score[i] = population->scout_novelty_score[j];
                 population->scout_generation[i] = population->scout_generation[j];
 
-                population->scout_parameters[j] = scout_parameters;
+                population->scout_network[j] = scout_network;
                 population->scout_stats[j] = scout_stats;
                 population->scout_novelty_score[j] = scout_novelty_score;
                 population->scout_generation[j] = scout_generation;
@@ -341,9 +341,9 @@ void iterate_training(Population *population)
     for (size_t i = safe_count; i < active_count; i++)
     {
         size_t j = rand() % safe_count;
-        population->scout_parameters[i] = population->scout_parameters[j];
+        population->scout_network[i] = population->scout_network[j];
         population->scout_generation[i] = population->scout_generation[j] + 1;
-        mutate_parameters(&population->scout_parameters[i]);
+        mutate_network(&population->scout_network[i]);
 
         // NOTE: The below isn't necessary for the program to function, but it
         // avoids confusion in the `info` command by not showing the replaced
@@ -378,7 +378,7 @@ int main(int argc, char const *argv[])
     population.capacity = 128;
 
     population.active_count = population.count;
-    population.scout_parameters = (NetworkParameters *)malloc(sizeof(NetworkParameters) * population.capacity);
+    population.scout_network = (Network *)malloc(sizeof(Network) * population.capacity);
     population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * population.capacity);
     population.scout_novelty_score = (double *)malloc(sizeof(double) * population.capacity);
     population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
@@ -387,7 +387,7 @@ int main(int argc, char const *argv[])
     printf("Creating initial population.\n");
     for (size_t i = 0; i < population.active_count; i++)
     {
-        randomise_scout_parameters(population.scout_parameters + i);
+        randomise_network(population.scout_network + i);
         init_scout_stats(population.scout_stats + i);
         population.scout_novelty_score[i] = 0;
         population.scout_generation[i] = 0;
@@ -476,17 +476,17 @@ int main(int argc, char const *argv[])
         }
 
         // COMMAND: save
-        // Save the parameters for a specific turtle
+        // Save the network parameters for a specific turtle
         else if (CMD_IS("save"))
         {
             if (cmd_arg_count == 0)
             {
-                save_parameters_to_lua(population.scout_parameters[0]);
+                dump_network_to_lua(population.scout_network[0]);
             }
             else if (cmd_arg_count == 1)
             {
                 size_t scout_index = atoi(cmd_args[0]);
-                save_parameters_to_lua(population.scout_parameters[scout_index]);
+                dump_network_to_lua(population.scout_network[scout_index]);
             }
             else
             {

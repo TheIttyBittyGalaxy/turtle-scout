@@ -1,37 +1,18 @@
 #include "network.h"
 
-void reset_network_values(NetworkValues *values, const NetworkParameters parameters)
+// RANDOMISE AND MUTATE NETWORK //
+
+void randomise_network(Network *network)
 {
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*values)[i] = parameters.bias[i];
-}
-
-void evaluate_network(const NetworkParameters parameter, NetworkValues *value)
-{
-    NetworkValues result;
-
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
-    {
-        result[i] = parameter.bias[i];
-        for (size_t j = 0; j < NUM_OF_NODES; j++)
-            result[i] += (*value)[j] * parameter.weight[j][i];
-    }
-
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*value)[i] = result[i];
-}
-
-void randomise_scout_parameters(NetworkParameters *parameters)
-{
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
-        parameters->bias[i] = rand_normal();
+        network->bias[i] = rand_normal();
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            parameters->weight[i][j] = rand_normal();
+            network->weight[i][j] = rand_normal();
 }
 
-void mutate_parameters(NetworkParameters *parameters)
+void mutate_network(Network *network)
 {
 #define MUTATE(x)                     \
     {                                 \
@@ -45,34 +26,61 @@ void mutate_parameters(NetworkParameters *parameters)
     }
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        MUTATE(parameters->bias[i])
+        MUTATE(network->bias[i])
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            MUTATE(parameters->weight[i][j])
+            MUTATE(network->weight[i][j])
 
 #undef MUTATE
 }
 
-void save_parameters_to_lua(const NetworkParameters parameters)
+// RESET VALUES //
+
+void reset_network_values(const Network network, NetworkValues *value)
+{
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        (*value)[i] = network.bias[i];
+}
+
+// EVALUATE NETWORK //
+
+void evaluate_network_values(const Network network, NetworkValues *value)
+{
+    NetworkValues result;
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+    {
+        result[i] = network.bias[i];
+        for (size_t j = 0; j < NUM_OF_NODES; j++)
+            result[i] += (*value)[j] * network.weight[j][i];
+    }
+
+    for (size_t i = 0; i < NUM_OF_NODES; i++)
+        (*value)[i] = result[i];
+}
+
+// DUMP NETWORK //
+
+void dump_network_to_lua(const Network network)
 {
     FILE *f;
     f = fopen("save/parameters.lua", "w");
 
     fprintf(f, "local parameters = {\n\tnodes = %d,", NUM_OF_NODES);
 
-    fprintf(f, "\n\tbias = { %f", parameters.bias[0]);
+    fprintf(f, "\n\tbias = { %f", network.bias[0]);
 
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(f, ", %f", parameters.bias[i]);
+        fprintf(f, ", %f", network.bias[i]);
 
     fprintf(f, " },\n\tweight = {");
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
     {
-        fprintf(f, "\n\t\t{ %f", parameters.weight[i][0]);
+        fprintf(f, "\n\t\t{ %f", network.weight[i][0]);
         for (size_t j = 1; j < NUM_OF_NODES; j++)
-            fprintf(f, ", %f", parameters.weight[i][j]);
+            fprintf(f, ", %f", network.weight[i][j]);
         fprintf(f, " },");
     }
 

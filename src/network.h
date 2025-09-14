@@ -9,10 +9,12 @@ typedef struct
 {
     double bias[NUM_OF_NODES];
     double weight[NUM_OF_NODES][NUM_OF_NODES]; // weight[a][b] is connection from a to b
-} NetworkParameters;
+} Network;
 
-void reset_network_values(NetworkValues *values, const NetworkParameters parameters);
-void evaluate_network(const NetworkParameters parameter, NetworkValues *value);
-void randomise_scout_parameters(NetworkParameters *parameters);
-void mutate_parameters(NetworkParameters *parameters);
-void save_parameters_to_lua(const NetworkParameters parameters);
+void randomise_network(Network *network);
+void mutate_network(Network *network);
+
+void reset_network_values(const Network network, NetworkValues *value);
+void evaluate_network_values(const Network network, NetworkValues *value);
+
+void dump_network_to_lua(const Network network);

@@ -57,9 +57,6 @@ void dump_environment(const Environment environment)
     for (size_t i = 0; i < environment.count; i++)
     {
         Segment segment = environment.segment[i];
-        int wx = segment.world_x;
-        int wy = segment.world_y;
-        int wz = segment.world_z;
 
         for (int sx = 0; sx < 16; sx++)
             for (int sy = 0; sy < 16; sy++)
@@ -69,9 +66,9 @@ void dump_environment(const Environment environment)
                     if (block == AIR)
                         continue;
 
-                    int x = wx * 16 + sx;
-                    int y = wy * 16 + sy;
-                    int z = wz * 16 + sz;
+                    int x = segment.grid_x * 16 + sx;
+                    int y = segment.grid_y * 16 + sy;
+                    int z = segment.grid_z * 16 + sz;
                     fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, block_to_mc(block));
                 }
     }
@@ -79,17 +76,21 @@ void dump_environment(const Environment environment)
     fclose(f);
 }
 
-Block get_block(const Environment environment, int block_x, int block_y, int block_z)
+Block get_block(const Environment environment, int x, int y, int z)
 {
-    int world_x = block_x / 16;
-    int world_y = block_y / 16;
-    int world_z = block_z / 16;
+    int sx = mod(x, 16);
+    int sy = mod(y, 16);
+    int sz = mod(z, 16);
+
+    int gx = (x - sx) / 16;
+    int gy = (y - sy) / 16;
+    int gz = (z - sz) / 16;
 
     Segment *segment = NULL;
     for (size_t i = 0; i < environment.count; i++)
     {
         segment = environment.segment + i;
-        if (segment->world_x == world_x && segment->world_y == world_y && segment->world_z == world_z)
+        if (segment->grid_x == gx && segment->grid_y == gy && segment->grid_z == gz)
             break;
     }
 
@@ -99,11 +100,7 @@ Block get_block(const Environment environment, int block_x, int block_y, int blo
         return AIR;
     }
 
-    int segment_x = block_x % 16;
-    int segment_y = block_y % 16;
-    int segment_z = block_z % 16;
-
-    return segment->block[segment_x][segment_y][segment_z];
+    return segment->block[sx][sy][sz];
 }
 
 Block get_block_in_front_of_scout(const Environment environment)
@@ -124,17 +121,21 @@ Block get_block_below_scout(const Environment environment)
     return get_block(environment, environment.scout.x, environment.scout.y - 1, environment.scout.z);
 }
 
-void set_block(Environment *environment, int block_x, int block_y, int block_z, Block block)
+void set_block(Environment *environment, int x, int y, int z, Block block)
 {
-    int world_x = block_x / 16;
-    int world_y = block_y / 16;
-    int world_z = block_z / 16;
+    int sx = mod(x, 16);
+    int sy = mod(y, 16);
+    int sz = mod(z, 16);
+
+    int gx = (x - sx) / 16;
+    int gy = (y - sy) / 16;
+    int gz = (z - sz) / 16;
 
     Segment *segment = NULL;
     for (size_t i = 0; i < environment->count; i++)
     {
         segment = environment->segment + i;
-        if (segment->world_x == world_x && segment->world_y == world_y && segment->world_z == world_z)
+        if (segment->grid_x == gx && segment->grid_y == gy && segment->grid_z == gz)
             break;
     }
 
@@ -144,9 +145,5 @@ void set_block(Environment *environment, int block_x, int block_y, int block_z, 
         return;
     }
 
-    int segment_x = block_x % 16;
-    int segment_y = block_y % 16;
-    int segment_z = block_z % 16;
-
-    segment->block[segment_x][segment_y][segment_z] = block;
+    segment->block[sx][sy][sz] = block;
 }

@@ -8,36 +8,36 @@
 
 // WORLD GEN //
 
-Segment generate_segment(int world_x, int world_y, int world_z)
+Segment generate_segment(int grid_x, int grid_y, int grid_z)
 {
     Segment segment;
-    segment.world_x = world_x;
-    segment.world_y = world_y;
-    segment.world_z = world_z;
+    segment.grid_x = grid_x;
+    segment.grid_y = grid_y;
+    segment.grid_z = grid_z;
 
-    if (world_y > 0)
+    if (grid_y > 0)
     {
-        for (size_t x = 0; x < 16; x++)
-            for (size_t y = 0; y < 16; y++)
-                for (size_t z = 0; z < 16; z++)
-                    segment.block[x][y][z] = AIR;
+        for (size_t sx = 0; sx < 16; sx++)
+            for (size_t sy = 0; sy < 16; sy++)
+                for (size_t sz = 0; sz < 16; sz++)
+                    segment.block[sx][sy][sz] = AIR;
     }
     else
     {
-        for (size_t x = 0; x < 16; x++)
-            for (size_t y = 0; y < 16; y++)
-                for (size_t z = 0; z < 16; z++)
-                    segment.block[x][y][z] = STONE;
+        for (size_t sx = 0; sx < 16; sx++)
+            for (size_t sy = 0; sy < 16; sy++)
+                for (size_t sz = 0; sz < 16; sz++)
+                    segment.block[sx][sy][sz] = STONE;
 
-        if (world_y == 0)
+        if (grid_y == 0)
         {
-            for (size_t x = 0; x < 16; x++)
-                for (size_t z = 0; z < 16; z++)
+            for (size_t sx = 0; sx < 16; sx++)
+                for (size_t sz = 0; sz < 16; sz++)
                 {
-                    segment.block[x][15][z] = GRASS_BLOCK;
-                    segment.block[x][14][z] = DIRT;
-                    segment.block[x][13][z] = DIRT;
-                    segment.block[x][12][z] = DIRT;
+                    segment.block[sx][15][sz] = GRASS_BLOCK;
+                    segment.block[sx][14][sz] = DIRT;
+                    segment.block[sx][13][sz] = DIRT;
+                    segment.block[sx][12][sz] = DIRT;
                 }
         }
     }
@@ -215,10 +215,10 @@ void iterate_training(Population *population)
         environment.segment = (Segment *)malloc(27 * sizeof(Segment));
 
         size_t i = 0;
-        for (int world_x = -1; world_x <= 1; world_x++)
-            for (int world_y = -1; world_y <= 1; world_y++)
-                for (int world_z = -1; world_z <= 1; world_z++)
-                    environment.segment[i++] = generate_segment(world_x, world_y, world_z);
+        for (int gx = -1; gx <= 1; gx++)
+            for (int gy = -1; gy <= 1; gy++)
+                for (int gz = -1; gz <= 1; gz++)
+                    environment.segment[i++] = generate_segment(gx, gy, gz);
 
         for (int y = 16; y <= 22; y++)
         {

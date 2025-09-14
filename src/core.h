@@ -9,4 +9,5 @@
 
 #define UNREACHABLE __builtin_unreachable();
 
+int mod(int a, int b);
 double rand_normal();

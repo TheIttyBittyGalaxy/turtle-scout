@@ -4,6 +4,12 @@
 #include "block.h"
 #include "direction.h"
 
+//         x/y/z - The position of a block within the minecraft world
+// Segment x/y/z - The position of a block within a 16x16x16 segment (0-15)
+//    Grid x/y/z - The position of a segment within the world's grid of segments
+//
+// World position = Grid position * 16 + Segment position
+
 typedef struct
 {
     int x;
@@ -14,9 +20,9 @@ typedef struct
 
 typedef struct
 {
-    int world_x;
-    int world_y;
-    int world_z;
+    int grid_x;
+    int grid_y;
+    int grid_z;
     Block block[16][16][16];
 } Segment;
 
@@ -25,9 +31,7 @@ typedef struct
     size_t count;
     size_t capacity;
 
-    // TODO: Make this a hash map rather than an array.
-    // This will make look-up faster, and will also mean
-    // segments do not have to store their own coordinates.
+    // TODO: Make this a hash map rather than an array to improve look-up speed.
     Segment *segment;
 
     EnvironmentScout scout;

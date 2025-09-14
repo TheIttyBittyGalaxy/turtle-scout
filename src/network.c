@@ -78,31 +78,19 @@ void evaluate_network_values(const Network network, NetworkValues *value)
         (*value)[i] = activation(result[i]);
 }
 
-// DUMP NETWORK //
+// SAVE NETWORK //
 
-void dump_network_to_lua(const Network network)
+void save_network(const Network network)
 {
-    FILE *f;
-    f = fopen("save/parameters.lua", "w");
+    FILE *f = fopen("save/network.bytes", "wb");
 
-    fprintf(f, "local parameters = {\n\tnodes = %d,", NUM_OF_NODES);
+    uint64_t count = NUM_OF_NODES;
+    fwrite(&count, sizeof(uint64_t), 1, f);
 
-    fprintf(f, "\n\tbias = { %e", network.bias[0]);
+    fwrite(network.bias, sizeof(double), NUM_OF_NODES, f);
 
-    for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(f, ", %e", network.bias[i]);
-
-    fprintf(f, " },\n\tweight = {");
-
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
-    {
-        fprintf(f, "\n\t\t{ %e", network.weight[i][0]);
-        for (size_t j = 1; j < NUM_OF_NODES; j++)
-            fprintf(f, ", %e", network.weight[i][j]);
-        fprintf(f, " },");
-    }
-
-    fprintf(f, "\n\t}\n}\n");
+    for (size_t i = 0; i < NUM_OF_NODES; ++i)
+        fwrite(network.weight[i], sizeof(double), NUM_OF_NODES, f);
 
     fclose(f);
 }

@@ -17,4 +17,4 @@ void mutate_network(Network *network);
 void reset_network_values(const Network network, NetworkValues *value);
 void evaluate_network_values(const Network network, NetworkValues *value);
 
-void dump_network_to_lua(const Network network);
+void save_network(const Network network);

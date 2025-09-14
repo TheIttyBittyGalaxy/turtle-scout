@@ -15,8 +15,44 @@ local Actions = {
 }
 
 -- NETWORK
+local network = {}
 local node = {}
 local result = {}
+
+do
+    local byte_file = io.open("network.bytes", "rb")
+    if not byte_file then
+        error("Could not open network.bytes")
+    end
+
+    local function read_unsigned_int()
+        local bytes = byte_file:read(8)
+        return string.unpack("I8", bytes)
+    end
+
+    local function read_double_array(n)
+        local array = {}
+        for i = 1, n do
+            local bytes = byte_file:read(8)
+            array[i] = string.unpack("d", bytes)
+        end
+        return array
+    end
+
+    local nodes = read_unsigned_int()
+    local bias = read_double_array(nodes)
+    local weight = {}
+    for i = 1, nodes do
+        weight[i] = read_double_array(nodes)
+    end
+
+    network.nodes = nodes
+    network.bias = bias
+    network.weight = weight
+
+    byte_file:close()
+end
+
 
 -- local function activation(x)
 --     if (x > 1) then return 1 end
@@ -29,9 +65,8 @@ local function activation(x)
     return 0
 end
 
-
-for i = 1, parameters.nodes do
-    node[i] = activation(parameters.bias[i])
+for i = 1, network.nodes do
+    node[i] = activation(network.bias[i])
     result[i] = 0
 end
 
@@ -47,11 +82,10 @@ if not net_log then
 end
 
 net_log:write(node[1])
-for i = 2, parameters.nodes do
+for i = 2, network.nodes do
     net_log:write(",", node[i])
 end
 net_log:write("\n")
-
 
 -- while true do
 for iteration = 1, 128 do
@@ -81,10 +115,10 @@ for iteration = 1, 128 do
     node[15] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
 
     -- Calculate results
-    for i = 1, parameters.nodes do
-        local value = parameters.bias[i]
-        for j = 1, parameters.nodes do
-            value = value + node[j] * parameters.weight[j][i]
+    for i = 1, network.nodes do
+        local value = network.bias[i]
+        for j = 1, network.nodes do
+            value = value + node[j] * network.weight[j][i]
         end
         result[i] = activation(value)
     end
@@ -96,7 +130,7 @@ for iteration = 1, 128 do
     local highest_activation = 0
 
     for i = 2, #Actions do
-        local n = (parameters.nodes - i) + 2
+        local n = (network.nodes - i) + 2
         if node[n] > highest_activation then
             action = Actions[i]
             highest_activation = node[n]
@@ -136,7 +170,7 @@ for iteration = 1, 128 do
         action, "\n")
 
     net_log:write(node[1])
-    for i = 2, parameters.nodes do
+    for i = 2, network.nodes do
         net_log:write(",", node[i])
     end
     net_log:write("\n")

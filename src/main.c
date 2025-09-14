@@ -638,7 +638,7 @@ int main(int argc, char const *argv[])
                     if (population.scout_id[i] != scout_id)
                         continue;
 
-                    dump_network_to_lua(population.scout_network[i]);
+                    save_network(population.scout_network[i]);
                     found_scout = true;
                     break;
                 }

@@ -611,8 +611,6 @@ int main(int argc, char const *argv[])
                     for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
                         printf("%4d  %s\n", population.scout_stats[i].stat[s], stat_name_to_string((StatName)s));
 
-                    printf("%f\n", population.scout_network[i].bias[0]);
-
                     found_scout = true;
                     break;
                 }

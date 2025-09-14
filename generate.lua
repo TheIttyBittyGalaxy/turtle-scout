@@ -31,10 +31,10 @@ end
 
 -- GENERATE CODE --
 
-local file = io.open("src/block.cpp", "w")
+local file = io.open("src/AUTO.c", "w")
 
 if not file then
-    error("Could not open src/block.cpp for writing.")
+    error("Could not open src/AUTO.c for writing.")
 end
 
 local function out(...)

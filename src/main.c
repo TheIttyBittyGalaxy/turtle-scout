@@ -53,10 +53,13 @@ typedef struct
     size_t count;        // All members of the population, historic and active
     size_t active_count; // On the active members of the population
 
+    size_t next_id;
+
+    size_t *scout_id;
+    size_t *scout_generation;
     Network *scout_network;
     Statistics *scout_stats;
     double *scout_novelty_score;
-    size_t *scout_generation;
 } Population;
 
 // PERFORM ACTIONS //
@@ -192,10 +195,12 @@ void iterate_training(Population *population)
 {
     size_t population_count = population->count;
     size_t active_count = population->active_count;
+
+    size_t *scout_id = population->scout_id;
+    size_t *scout_generation = population->scout_generation;
     Network *scout_network = population->scout_network;
     Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
-    size_t *scout_generation = population->scout_generation;
 
     // Generate environment
     Environment environment;
@@ -313,20 +318,23 @@ void iterate_training(Population *population)
         {
             if (population->scout_novelty_score[i] < population->scout_novelty_score[j])
             {
+                size_t scout_id = population->scout_id[i];
+                size_t scout_generation = population->scout_generation[i];
                 Network scout_network = population->scout_network[i];
                 Statistics scout_stats = population->scout_stats[i];
                 double scout_novelty_score = population->scout_novelty_score[i];
-                size_t scout_generation = population->scout_generation[i];
 
+                population->scout_id[i] = population->scout_id[j];
+                population->scout_generation[i] = population->scout_generation[j];
                 population->scout_network[i] = population->scout_network[j];
                 population->scout_stats[i] = population->scout_stats[j];
                 population->scout_novelty_score[i] = population->scout_novelty_score[j];
-                population->scout_generation[i] = population->scout_generation[j];
 
+                population->scout_id[j] = scout_id;
+                population->scout_generation[j] = scout_generation;
                 population->scout_network[j] = scout_network;
                 population->scout_stats[j] = scout_stats;
                 population->scout_novelty_score[j] = scout_novelty_score;
-                population->scout_generation[j] = scout_generation;
             }
         }
     }
@@ -336,8 +344,9 @@ void iterate_training(Population *population)
     for (size_t i = safe_count; i < active_count; i++)
     {
         size_t j = rand() % safe_count;
-        population->scout_network[i] = population->scout_network[j];
+        population->scout_id[i] = population->next_id++;
         population->scout_generation[i] = population->scout_generation[j] + 1;
+        population->scout_network[i] = population->scout_network[j];
         mutate_network(&population->scout_network[i]);
 
         // NOTE: The below isn't necessary for the program to function, but it
@@ -373,19 +382,24 @@ int main(int argc, char const *argv[])
     population.capacity = 128;
 
     population.active_count = population.count;
+    population.next_id = population.count;
+
+    population.scout_id = (size_t *)malloc(sizeof(size_t) * population.capacity);
+    population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
     population.scout_network = (Network *)malloc(sizeof(Network) * population.capacity);
     population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * population.capacity);
     population.scout_novelty_score = (double *)malloc(sizeof(double) * population.capacity);
-    population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
 
     // Generate random initial population
     printf("Creating initial population.\n");
     for (size_t i = 0; i < population.active_count; i++)
     {
+        population.scout_id[i] = i;
+        population.scout_generation[i] = 0;
+
         randomise_network(population.scout_network + i);
         init_scout_stats(population.scout_stats + i);
         population.scout_novelty_score[i] = 0;
-        population.scout_generation[i] = 0;
     }
 
 // Command loop
@@ -419,8 +433,7 @@ int main(int argc, char const *argv[])
             printf("info               : List the current population of scouts.\n");
             printf("train              : Run a training iteration.\n");
             printf("train <iterations> : Run <iterations> training iterations.\n");
-            printf("save               : Save the most novel scout in the population.\n");
-            printf("save <scout_index> : Save the scout in <scout_index>.\n");
+            printf("save <scout_id>    : Save the scout with ID <scout_id>.\n");
         }
 
         // COMMAND: train <iterations>
@@ -460,7 +473,7 @@ int main(int argc, char const *argv[])
                 }
 
                 printf("%02d | %f\t%d\t",
-                       i,
+                       population.scout_id[i],
                        population.scout_novelty_score[i],
                        population.scout_generation[i]);
 
@@ -474,14 +487,22 @@ int main(int argc, char const *argv[])
         // Save the network parameters for a specific turtle
         else if (CMD_IS("save"))
         {
-            if (cmd_arg_count == 0)
+            if (cmd_arg_count == 1)
             {
-                dump_network_to_lua(population.scout_network[0]);
-            }
-            else if (cmd_arg_count == 1)
-            {
-                size_t scout_index = atoi(cmd_args[0]);
-                dump_network_to_lua(population.scout_network[scout_index]);
+                size_t scout_id = atoi(cmd_args[0]);
+                bool found_scout = false;
+                for (size_t i = 0; i < population.count; i++)
+                {
+                    if (population.scout_id[i] == scout_id)
+                    {
+                        dump_network_to_lua(population.scout_network[i]);
+                        found_scout = true;
+                        break;
+                    }
+                }
+
+                if (!found_scout)
+                    printf("There is no scout in the population with ID %d.\n", scout_id);
             }
             else
             {

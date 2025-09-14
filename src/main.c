@@ -8,6 +8,8 @@
 
 // WORLD GEN //
 
+Environment standard_environment;
+
 Segment generate_segment(int grid_x, int grid_y, int grid_z)
 {
     Segment segment;
@@ -192,6 +194,8 @@ double novelty_distance(const Statistics a, const Statistics b)
 
 // SIMULATE SCOUT //
 
+FILE *simulation_log;
+
 NetworkValues simulation_network_values;
 Environment simulation_environment;
 Statistics simulation_statistics;
@@ -199,6 +203,11 @@ size_t simulation_iteration;
 
 void initialise_simulation(const Network network, const Environment environment)
 {
+    if (simulation_log != NULL)
+        fclose(simulation_log);
+
+    simulation_log = fopen("save/log.csv", "w");
+
     reset_network_values(network, &simulation_network_values);
     copy_environment(environment, &simulation_environment);
     init_scout_stats(&simulation_statistics);
@@ -211,6 +220,28 @@ inline void iterate_simulation(const Network network)
     evaluate_network_values(network, &simulation_network_values);
     Action action = determine_network_action(simulation_network_values);
     perform_action(&simulation_environment, action, &simulation_statistics);
+    simulation_iteration++;
+}
+
+inline void iterate_simulation_and_log(const Network network)
+{
+    Block front = get_block_in_front_of_scout(simulation_environment);
+    Block above = get_block_above_scout(simulation_environment);
+    Block below = get_block_below_scout(simulation_environment);
+
+    set_network_inputs(&simulation_network_values, simulation_environment);
+    evaluate_network_values(network, &simulation_network_values);
+    Action action = determine_network_action(simulation_network_values);
+    perform_action(&simulation_environment, action, &simulation_statistics);
+
+    fprintf(simulation_log,
+            "%d,%s,%s,%s,%s\n",
+            simulation_iteration,
+            block_to_string(front),
+            block_to_string(above),
+            block_to_string(below),
+            action_as_string(action));
+
     simulation_iteration++;
 }
 
@@ -227,52 +258,14 @@ void iterate_training(Population *population)
     Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
 
-    // Generate environment
-    Environment environment;
-    init_environment(&environment);
-
-    {
-        environment.scout.x = 0;
-        environment.scout.y = 16;
-        environment.scout.z = 0;
-        environment.scout.facing = EAST;
-
-        environment.capacity = 27;
-        environment.count = 27;
-        environment.segment = (Segment *)malloc(27 * sizeof(Segment));
-
-        size_t i = 0;
-        for (int gx = -1; gx <= 1; gx++)
-            for (int gy = -1; gy <= 1; gy++)
-                for (int gz = -1; gz <= 1; gz++)
-                    environment.segment[i++] = generate_segment(gx, gy, gz);
-
-        for (int y = 16; y <= 22; y++)
-        {
-            set_block(&environment, 1, y, 0, OAK_LOG);
-            if (y > 17)
-            {
-                set_block(&environment, 2, y, 0, OAK_LEAVES);
-                set_block(&environment, 0, y, 0, OAK_LEAVES);
-                set_block(&environment, 1, y, 1, OAK_LEAVES);
-                set_block(&environment, 1, y, -1, OAK_LEAVES);
-            }
-        }
-    }
-
-    dump_environment(environment);
-
     // Evaluate each scout
     for (size_t i = 0; i < active_count; i++)
     {
-        initialise_simulation(scout_network[i], environment);
+        initialise_simulation(scout_network[i], standard_environment);
         for (size_t n = 0; n < 128; n++)
             iterate_simulation(scout_network[i]);
         scout_stats[i] = simulation_statistics;
     }
-
-    // FIXME: It's not worth allocating and freeing this memory on every training iteration.
-    free_environment(&environment);
 
     // Generate novelty scores
     for (size_t i = 0; i < active_count; i++)
@@ -381,14 +374,47 @@ void iterate_training(Population *population)
 
 int main(int argc, char const *argv[])
 {
-    // Command variables
-    char cmd_buffer[CMD_CHAR_LIMIT];
-    char *cmd_args[8];
-    size_t cmd_arg_count;
+
+    // Simulation
+    simulation_log = NULL;
 
     // TODO: Allow user to specify the seed
     printf("Seed 42.\n");
     srand(42);
+
+    // Generate standard environment
+    // TODO: Create a unique environment for each training iteration
+
+    init_environment(&standard_environment);
+
+    standard_environment.scout.x = 0;
+    standard_environment.scout.y = 16;
+    standard_environment.scout.z = 0;
+    standard_environment.scout.facing = EAST;
+
+    standard_environment.capacity = 27;
+    standard_environment.count = 27;
+    standard_environment.segment = (Segment *)malloc(27 * sizeof(Segment));
+
+    size_t i = 0;
+    for (int gx = -1; gx <= 1; gx++)
+        for (int gy = -1; gy <= 1; gy++)
+            for (int gz = -1; gz <= 1; gz++)
+                standard_environment.segment[i++] = generate_segment(gx, gy, gz);
+
+    for (int y = 16; y <= 22; y++)
+    {
+        set_block(&standard_environment, 1, y, 0, OAK_LOG);
+        if (y > 17)
+        {
+            set_block(&standard_environment, 2, y, 0, OAK_LEAVES);
+            set_block(&standard_environment, 0, y, 0, OAK_LEAVES);
+            set_block(&standard_environment, 1, y, 1, OAK_LEAVES);
+            set_block(&standard_environment, 1, y, -1, OAK_LEAVES);
+        }
+    }
+
+    dump_environment(standard_environment);
 
     // Initialise population
     Population population;
@@ -416,8 +442,13 @@ int main(int argc, char const *argv[])
         population.scout_novelty_score[i] = 0;
     }
 
-// Command loop
+    // Command loop
+    char cmd_buffer[CMD_CHAR_LIMIT];
+    char *cmd_args[8];
+    size_t cmd_arg_count;
+
 #define CMD_IS(s) (strcmp(cmd_buffer, s) == 0)
+
     while (true)
     {
         // Enter new command
@@ -472,6 +503,36 @@ int main(int argc, char const *argv[])
             else
             {
                 printf("Usage: train <iterations>\n");
+            }
+        }
+
+        // COMMAND: sim
+        // Simulate a scout and log the outcome
+        else if (CMD_IS("sim"))
+        {
+            if (cmd_arg_count == 1)
+            {
+                size_t scout_id = atoi(cmd_args[0]);
+                bool found_scout = false;
+                for (size_t i = 0; i < population.count; i++)
+                {
+                    if (population.scout_id[i] != scout_id)
+                        continue;
+
+                    initialise_simulation(population.scout_network[i], standard_environment);
+                    for (size_t n = 0; n < 128; n++)
+                        iterate_simulation_and_log(population.scout_network[i]);
+
+                    found_scout = true;
+                    break;
+                }
+
+                if (!found_scout)
+                    printf("There is no scout in the population with ID %d.\n", scout_id);
+            }
+            else
+            {
+                printf("Usage: sim <scout_id>\n");
             }
         }
 
@@ -563,4 +624,7 @@ int main(int argc, char const *argv[])
             printf("Command not recognised.\n");
         }
     }
+
+    if (simulation_log != NULL)
+        fclose(simulation_log);
 }

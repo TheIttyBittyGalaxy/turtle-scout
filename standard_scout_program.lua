@@ -24,10 +24,22 @@ for i = 1, parameters.nodes do
 end
 
 -- MAIN LOOP
-local log = io.open("log.csv", "w")
+local log = io.open("cc_simulation_log.csv", "w")
 if not log then
-    error("Could not open log.csv for writing.")
+    error("Could not open cc_simulation_log.csv for writing.")
 end
+
+local net_log = io.open("cc_net_log.csv", "w")
+if not net_log then
+    error("Could not open cc_net_log.csv for writing.")
+end
+
+net_log:write(node[1])
+for i = 2, parameters.nodes do
+    net_log:write(",", node[i])
+end
+net_log:write("\n")
+
 
 -- while true do
 for iteration = 1, 128 do
@@ -111,6 +123,13 @@ for iteration = 1, 128 do
         is_below and below.name:sub(11):upper() or "AIR", ",",
         action, "\n")
 
+    net_log:write(node[1])
+    for i = 2, parameters.nodes do
+        net_log:write(",", node[i])
+    end
+    net_log:write("\n")
+
 end
 
 log:close()
+net_log:close()

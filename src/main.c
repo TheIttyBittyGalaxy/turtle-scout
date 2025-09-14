@@ -6,7 +6,7 @@
 #include "statistics.h"
 #include "generated.h"
 
-// #define LOG_NETWORK
+#define LOG_NETWORK
 
 // WORLD GEN //
 
@@ -245,6 +245,11 @@ void open_simulation_log()
 
 #ifdef LOG_NETWORK
     network_log = fopen("save/network_log.csv", "w");
+
+    fprintf(network_log, "%f", simulation_network_values[0]);
+    for (size_t i = 1; i < NUM_OF_NODES; i++)
+        fprintf(network_log, ",%f", simulation_network_values[i]);
+    fprintf(network_log, "\n");
 #endif
 }
 
@@ -549,6 +554,7 @@ int main(int argc, char const *argv[])
 
                     initialise_simulation(population.scout_network[i], standard_environment);
                     open_simulation_log();
+
                     for (size_t n = 0; n < 128; n++)
                         iterate_simulation_and_log(population.scout_network[i]);
                     close_simulation_log();

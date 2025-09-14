@@ -35,12 +35,30 @@ void mutate_network(Network *network)
 #undef MUTATE
 }
 
+// ACTIVATION //
+
+// double activation(double x)
+// {
+//     if (x > 1)
+//         return 1;
+//     if (x < -1)
+//         return -1;
+//     return x;
+// }
+
+double activation(double x)
+{
+    if (x > 0)
+        return 1;
+    return 0;
+}
+
 // RESET VALUES //
 
 void reset_network_values(const Network network, NetworkValues *value)
 {
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*value)[i] = network.bias[i];
+        (*value)[i] = activation(network.bias[i]);
 }
 
 // EVALUATE NETWORK //
@@ -57,7 +75,7 @@ void evaluate_network_values(const Network network, NetworkValues *value)
     }
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*value)[i] = result[i];
+        (*value)[i] = activation(result[i]);
 }
 
 // DUMP NETWORK //

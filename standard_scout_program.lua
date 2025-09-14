@@ -18,8 +18,20 @@ local Actions = {
 local node = {}
 local result = {}
 
+-- local function activation(x)
+--     if (x > 1) then return 1 end
+--     if (x < -1) then return -1 end
+--     return x
+-- end
+
+local function activation(x)
+    if (x > 0) then return 1 end
+    return 0
+end
+
+
 for i = 1, parameters.nodes do
-    node[i] = parameters.bias[i]
+    node[i] = activation(parameters.bias[i])
     result[i] = 0
 end
 
@@ -74,7 +86,7 @@ for iteration = 1, 128 do
         for j = 1, parameters.nodes do
             value = value + node[j] * parameters.weight[j][i]
         end
-        result[i] = value
+        result[i] = activation(value)
     end
 
     node, result = result, node

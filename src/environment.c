@@ -48,11 +48,6 @@ void dump_environment(const Environment environment)
     FILE *f;
     f = fopen("mcfunct/environment_dump.mcfunction", "w");
 
-    // Turtle (without program, just for reference)
-    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout.x, environment.scout.y, environment.scout.z);
-    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout.facing));
-    fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
-
     // Blocks in each segment
     for (size_t i = 0; i < environment.count; i++)
     {
@@ -73,52 +68,24 @@ void dump_environment(const Environment environment)
                 }
     }
 
+    // Turtle (without program, just for reference)
+    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout.x, environment.scout.y, environment.scout.z);
+    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout.facing));
+    fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
+
     fclose(f);
 }
 
-Block get_block(const Environment environment, int x, int y, int z)
+// FIXME: Make the array a hash map insted to make this lookup faster
+Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z)
 {
-    int sx = mod(x, 16);
-    int sy = mod(y, 16);
-    int sz = mod(z, 16);
-
-    int gx = (x - sx) / 16;
-    int gy = (y - sy) / 16;
-    int gz = (z - sz) / 16;
-
-    Segment *segment = NULL;
     for (size_t i = 0; i < environment.count; i++)
     {
-        segment = environment.segment + i;
-        if (segment->grid_x == gx && segment->grid_y == gy && segment->grid_z == gz)
-            break;
+        Segment *segment = environment.segment + i;
+        if (segment->grid_x == grid_x && segment->grid_y == grid_y && segment->grid_z == grid_z)
+            return segment;
     }
-
-    if (segment == NULL)
-    {
-        // TODO: Generate this segment (and/or make this scenario impossible?)
-        return AIR;
-    }
-
-    return segment->block[sx][sy][sz];
-}
-
-Block get_block_in_front_of_scout(const Environment environment)
-{
-    int x = environment.scout.x + x_offset_of(environment.scout.facing);
-    int y = environment.scout.y;
-    int z = environment.scout.z + z_offset_of(environment.scout.facing);
-    return get_block(environment, x, y, z);
-}
-
-Block get_block_above_scout(const Environment environment)
-{
-    return get_block(environment, environment.scout.x, environment.scout.y + 1, environment.scout.z);
-}
-
-Block get_block_below_scout(const Environment environment)
-{
-    return get_block(environment, environment.scout.x, environment.scout.y - 1, environment.scout.z);
+    return NULL;
 }
 
 void set_block(Environment *environment, int x, int y, int z, Block block)
@@ -131,19 +98,61 @@ void set_block(Environment *environment, int x, int y, int z, Block block)
     int gy = (y - sy) / 16;
     int gz = (z - sz) / 16;
 
-    Segment *segment = NULL;
-    for (size_t i = 0; i < environment->count; i++)
-    {
-        segment = environment->segment + i;
-        if (segment->grid_x == gx && segment->grid_y == gy && segment->grid_z == gz)
-            break;
-    }
+    Segment *segment = get_segment(*environment, gx, gy, gz);
 
     if (segment == NULL)
     {
-        // TODO: Generate this segment (and/or make this scenario impossible?)
+        printf("WARNING: Attempt to set block in a segment that does not exist.");
         return;
     }
 
     segment->block[sx][sy][sz] = block;
+}
+
+Block get_block(const Environment environment, int x, int y, int z)
+{
+    int sx = mod(x, 16);
+    int sy = mod(y, 16);
+    int sz = mod(z, 16);
+
+    int gx = (x - sx) / 16;
+    int gy = (y - sy) / 16;
+    int gz = (z - sz) / 16;
+
+    Segment *segment = get_segment(environment, gx, gy, gz);
+
+    if (segment == NULL)
+    {
+        printf("WARNING: Attempt to get block in a segment that does not exist.");
+        return AIR;
+    }
+
+    return segment->block[sx][sy][sz];
+}
+
+Block get_block_in_front_of_scout(const Environment environment)
+{
+    return get_block(
+        environment,
+        environment.scout.x + x_offset_of(environment.scout.facing),
+        environment.scout.y,
+        environment.scout.z + z_offset_of(environment.scout.facing));
+}
+
+Block get_block_above_scout(const Environment environment)
+{
+    return get_block(
+        environment,
+        environment.scout.x,
+        environment.scout.y + 1,
+        environment.scout.z);
+}
+
+Block get_block_below_scout(const Environment environment)
+{
+    return get_block(
+        environment,
+        environment.scout.x,
+        environment.scout.y - 1,
+        environment.scout.z);
 }

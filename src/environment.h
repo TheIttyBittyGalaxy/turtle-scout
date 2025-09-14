@@ -30,8 +30,6 @@ typedef struct
 {
     size_t count;
     size_t capacity;
-
-    // TODO: Make this a hash map rather than an array to improve look-up speed.
     Segment *segment;
 
     EnvironmentScout scout;
@@ -42,9 +40,11 @@ void free_environment(Environment *environment);
 void copy_environment(const Environment src, Environment *dst);
 void dump_environment(const Environment environment);
 
-Block get_block(const Environment environment, int block_x, int block_y, int block_z);
+Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z);
+
+void set_block(Environment *environment, int x, int y, int z, Block block);
+
+Block get_block(const Environment environment, int x, int y, int z);
 Block get_block_in_front_of_scout(const Environment environment);
 Block get_block_above_scout(const Environment environment);
 Block get_block_below_scout(const Environment environment);
-
-void set_block(Environment *environment, int block_x, int block_y, int block_z, Block block);

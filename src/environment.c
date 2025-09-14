@@ -102,7 +102,9 @@ void set_block(Environment *environment, int x, int y, int z, Block block)
 
     if (segment == NULL)
     {
-        printf("WARNING: Attempt to set block in a segment that does not exist.");
+        // TODO: Once segments are being procedurally generated, this
+        //       should no longer occur. Turn warnings back on.
+        // printf("WARNING: Attempt to SET block in a segment that does not exist.\n");
         return;
     }
 
@@ -123,7 +125,9 @@ Block get_block(const Environment environment, int x, int y, int z)
 
     if (segment == NULL)
     {
-        printf("WARNING: Attempt to get block in a segment that does not exist.");
+        // TODO: Once segments are being procedurally generated, this
+        //       should no longer occur. Turn warnings back on.
+        // printf("WARNING: Attempt to GET block in a segment that does not exist.\n");
         return AIR;
     }
 

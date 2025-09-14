@@ -72,18 +72,7 @@ void dump_environment(const Environment environment)
                     int x = wx * 16 + sx;
                     int y = wy * 16 + sy;
                     int z = wz * 16 + sz;
-                    fprintf(f, "setblock ~%d ~%d ~%d minecraft:", x, y, z);
-
-                    if (block == STONE)
-                        fprintf(f, "stone");
-                    else if (block == DIRT)
-                        fprintf(f, "dirt");
-                    else if (block == GRASS)
-                        fprintf(f, "grass_block");
-                    else
-                        fprintf(f, "bedrock");
-
-                    fprintf(f, "\n");
+                    fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, block_to_mc(block));
                 }
     }
 

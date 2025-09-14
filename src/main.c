@@ -4,6 +4,7 @@
 #include "environment.h"
 #include "network.h"
 #include "statistics.h"
+#include "generated.h"
 
 // WORLD GEN //
 
@@ -62,20 +63,10 @@ typedef struct
 
 void set_network_inputs(NetworkValues *values, const Environment environment)
 {
-#define SET_BLOCK_INPUTS(block)              \
-    {                                        \
-        Block b = block;                     \
-        (*values)[i++] = b == STONE ? 1 : 0; \
-        (*values)[i++] = b == DIRT ? 1 : 0;  \
-        (*values)[i++] = b == GRASS ? 1 : 0; \
-    }
-
-    size_t i = 0;
-    SET_BLOCK_INPUTS(get_block_in_front_of_scout(environment));
-    SET_BLOCK_INPUTS(get_block_above_scout(environment));
-    SET_BLOCK_INPUTS(get_block_below_scout(environment));
-
-#undef SET_BLOCK_INPUT
+    size_t next_node = 0;
+    next_node = set_network_block_inputs(values, environment, next_node, get_block_in_front_of_scout(environment));
+    next_node = set_network_block_inputs(values, environment, next_node, get_block_above_scout(environment));
+    next_node = set_network_block_inputs(values, environment, next_node, get_block_below_scout(environment));
 }
 
 Action determine_network_action(const NetworkValues network_values)

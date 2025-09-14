@@ -6,6 +6,14 @@
 
 typedef struct
 {
+    int x;
+    int y;
+    int z;
+    Direction facing;
+} EnvironmentScout;
+
+typedef struct
+{
     int world_x;
     int world_y;
     int world_z;
@@ -14,11 +22,6 @@ typedef struct
 
 typedef struct
 {
-    int scout_x;
-    int scout_y;
-    int scout_z;
-    Direction scout_facing;
-
     size_t count;
     size_t capacity;
 
@@ -26,6 +29,8 @@ typedef struct
     // This will make look-up faster, and will also mean
     // segments do not have to store their own coordinates.
     Segment *segment;
+
+    EnvironmentScout scout;
 } Environment;
 
 void init_environment(Environment *environment);

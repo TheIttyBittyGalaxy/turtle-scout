@@ -106,13 +106,13 @@ void perform_action(Environment *environment, const Action action, Statistics *s
     // TURN
     if (action == TURN_LEFT)
     {
-        environment->scout_facing = left_of(environment->scout_facing);
+        environment->scout.facing = left_of(environment->scout.facing);
         return;
     }
 
     if (action == TURN_RIGHT)
     {
-        environment->scout_facing = right_of(environment->scout_facing);
+        environment->scout.facing = right_of(environment->scout.facing);
         return;
     }
 
@@ -121,16 +121,16 @@ void perform_action(Environment *environment, const Action action, Statistics *s
     {
         if (is_up_action(action) && get_block_above_scout(*environment) == AIR)
         {
-            environment->scout_y++;
+            environment->scout.y++;
         }
         else if (is_down_action(action) && get_block_below_scout(*environment) == AIR)
         {
-            environment->scout_y--;
+            environment->scout.y--;
         }
         else if (get_block_in_front_of_scout(*environment) == AIR)
         {
-            environment->scout_x += x_offset_of(environment->scout_facing);
-            environment->scout_z += z_offset_of(environment->scout_facing);
+            environment->scout.x += x_offset_of(environment->scout.facing);
+            environment->scout.z += z_offset_of(environment->scout.facing);
         }
         else
         {
@@ -145,9 +145,9 @@ void perform_action(Environment *environment, const Action action, Statistics *s
     // DIG
     if (is_dig_action(action))
     {
-        int x = environment->scout_x;
-        int y = environment->scout_y;
-        int z = environment->scout_z;
+        int x = environment->scout.x;
+        int y = environment->scout.y;
+        int z = environment->scout.z;
 
         if (is_up_action(action))
         {
@@ -159,8 +159,8 @@ void perform_action(Environment *environment, const Action action, Statistics *s
         }
         else
         {
-            x += x_offset_of(environment->scout_facing);
-            z += z_offset_of(environment->scout_facing);
+            x += x_offset_of(environment->scout.facing);
+            z += z_offset_of(environment->scout.facing);
         }
 
         Block block = get_block(*environment, x, y, z);
@@ -221,10 +221,10 @@ void iterate_training(Population *population)
     init_environment(&copy_of_environment);
 
     {
-        environment.scout_x = 0;
-        environment.scout_y = 16;
-        environment.scout_z = 0;
-        environment.scout_facing = EAST;
+        environment.scout.x = 0;
+        environment.scout.y = 16;
+        environment.scout.z = 0;
+        environment.scout.facing = EAST;
 
         environment.capacity = 27;
         environment.count = 27;

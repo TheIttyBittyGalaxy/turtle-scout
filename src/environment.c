@@ -2,10 +2,10 @@
 
 void init_environment(Environment *environment)
 {
-    environment->scout_x = 0;
-    environment->scout_y = 0;
-    environment->scout_z = 0;
-    environment->scout_facing = NORTH;
+    environment->scout.x = 0;
+    environment->scout.y = 0;
+    environment->scout.z = 0;
+    environment->scout.facing = NORTH;
 
     environment->count = 0;
     environment->capacity = 0;
@@ -23,10 +23,10 @@ void free_environment(Environment *environment)
 // FIXME: Change src to a const
 void copy_environment(Environment *src, Environment *dst)
 {
-    dst->scout_x = src->scout_x;
-    dst->scout_y = src->scout_y;
-    dst->scout_z = src->scout_z;
-    dst->scout_facing = src->scout_facing;
+    dst->scout.x = src->scout.x;
+    dst->scout.y = src->scout.y;
+    dst->scout.z = src->scout.z;
+    dst->scout.facing = src->scout.facing;
 
     if (dst->capacity == 0)
     {
@@ -50,8 +50,8 @@ void dump_environment(const Environment environment)
     f = fopen("mcfunct/environment_dump.mcfunction", "w");
 
     // Turtle (without program, just for reference)
-    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout_x, environment.scout_y, environment.scout_z);
-    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout_facing));
+    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout.x, environment.scout.y, environment.scout.z);
+    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout.facing));
     fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
 
     // Blocks in each segment
@@ -120,20 +120,20 @@ Block get_block(const Environment environment, int block_x, int block_y, int blo
 
 Block get_block_in_front_of_scout(const Environment environment)
 {
-    int x = environment.scout_x + x_offset_of(environment.scout_facing);
-    int y = environment.scout_y;
-    int z = environment.scout_z + z_offset_of(environment.scout_facing);
+    int x = environment.scout.x + x_offset_of(environment.scout.facing);
+    int y = environment.scout.y;
+    int z = environment.scout.z + z_offset_of(environment.scout.facing);
     return get_block(environment, x, y, z);
 }
 
 Block get_block_above_scout(const Environment environment)
 {
-    return get_block(environment, environment.scout_x, environment.scout_y + 1, environment.scout_z);
+    return get_block(environment, environment.scout.x, environment.scout.y + 1, environment.scout.z);
 }
 
 Block get_block_below_scout(const Environment environment)
 {
-    return get_block(environment, environment.scout_x, environment.scout_y - 1, environment.scout_z);
+    return get_block(environment, environment.scout.x, environment.scout.y - 1, environment.scout.z);
 }
 
 void set_block(Environment *environment, int block_x, int block_y, int block_z, Block block)

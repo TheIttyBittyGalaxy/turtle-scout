@@ -12,18 +12,6 @@ local blocks = {
     },
 }
 
--- GENERATE EXTRA DATA --
-
-local block_map = {}
-
-for i, block in ipairs(blocks) do
-    block.id = i
-    block.enum = block.name:upper()
-    block.stat_enum = "COLLECT_" .. block.name:upper()
-
-    block_map[block.name] = block
-end
-
 -- UTIL --
 
 local function open(path)

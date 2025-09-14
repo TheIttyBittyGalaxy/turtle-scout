@@ -24,6 +24,11 @@ for i = 1, parameters.nodes do
 end
 
 -- MAIN LOOP
+local log = io.open("log.csv", "w")
+if not log then
+    error("Could not open log.csv for writing.")
+end
+
 -- while true do
 for iteration = 1, 128 do
 
@@ -32,17 +37,24 @@ for iteration = 1, 128 do
     local is_above, above = turtle.inspectUp()
     local is_below, below = turtle.inspectDown()
 
+    -- TODO: Generate this in generate.lua
     node[1] = is_front and front.name == "minecraft:stone" and 1 or 0
     node[2] = is_front and front.name == "minecraft:dirt" and 1 or 0
     node[3] = is_front and front.name == "minecraft:grass_block" and 1 or 0
+    node[4] = is_front and front.name == "minecraft:oak_log" and 1 or 0
+    node[5] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
 
-    node[4] = is_above and above.name == "minecraft:stone" and 1 or 0
-    node[5] = is_above and above.name == "minecraft:dirt" and 1 or 0
-    node[6] = is_above and above.name == "minecraft:grass_block" and 1 or 0
+    node[6] = is_front and front.name == "minecraft:stone" and 1 or 0
+    node[7] = is_front and front.name == "minecraft:dirt" and 1 or 0
+    node[8] = is_front and front.name == "minecraft:grass_block" and 1 or 0
+    node[9] = is_front and front.name == "minecraft:oak_log" and 1 or 0
+    node[10] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
 
-    node[7] = is_below and below.name == "minecraft:stone" and 1 or 0
-    node[8] = is_below and below.name == "minecraft:dirt" and 1 or 0
-    node[9] = is_below and below.name == "minecraft:grass_block" and 1 or 0
+    node[11] = is_front and front.name == "minecraft:stone" and 1 or 0
+    node[12] = is_front and front.name == "minecraft:dirt" and 1 or 0
+    node[13] = is_front and front.name == "minecraft:grass_block" and 1 or 0
+    node[14] = is_front and front.name == "minecraft:oak_log" and 1 or 0
+    node[15] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
 
     -- Calculate results
     for i = 1, parameters.nodes do
@@ -90,4 +102,15 @@ for iteration = 1, 128 do
     elseif action == "DIG_DOWN" then
         turtle.digDown()
     end
+
+    -- Log
+    log:write(
+        iteration - 1, ",",
+        is_front and front.name:sub(11):upper() or "AIR", ",",
+        is_above and above.name:sub(11):upper() or "AIR", ",",
+        is_below and below.name:sub(11):upper() or "AIR", ",",
+        action, "\n")
+
 end
+
+log:close()

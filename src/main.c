@@ -6,6 +6,8 @@
 #include "statistics.h"
 #include "generated.h"
 
+// #define LOG_NETWORK
+
 // WORLD GEN //
 
 Environment standard_environment;
@@ -196,6 +198,10 @@ double novelty_distance(const Statistics a, const Statistics b)
 
 FILE *simulation_log = NULL;
 
+#ifdef LOG_NETWORK
+FILE *network_log = NULL;
+#endif
+
 NetworkValues simulation_network_values;
 Environment simulation_environment;
 Statistics simulation_statistics;
@@ -224,6 +230,10 @@ void close_simulation_log()
         return;
 
     fclose(simulation_log);
+
+#ifdef LOG_NETWORK
+    fclose(network_log);
+#endif
 }
 
 void open_simulation_log()
@@ -232,6 +242,10 @@ void open_simulation_log()
         close_simulation_log();
 
     simulation_log = fopen("save/simulation_log.csv", "w");
+
+#ifdef LOG_NETWORK
+    network_log = fopen("save/network_log.csv", "w");
+#endif
 }
 
 inline void iterate_simulation_and_log(const Network network)
@@ -252,6 +266,13 @@ inline void iterate_simulation_and_log(const Network network)
             block_to_string(above),
             block_to_string(below),
             action_as_string(action));
+
+#ifdef LOG_NETWORK
+    fprintf(network_log, "%f", simulation_network_values[0]);
+    for (size_t i = 1; i < NUM_OF_NODES; i++)
+        fprintf(network_log, ",%f", simulation_network_values[i]);
+    fprintf(network_log, "\n");
+#endif
 
     simulation_iteration++;
 }

@@ -1,6 +1,8 @@
 #include "network.h"
 
 #define BITMASK_FOR(n) (1ULL << n)
+#define SET_BIT(bitfield, n) bitfield |= BITMASK_FOR(n)
+#define UNSET_BIT(bitfield, n) bitfield &= ~BITMASK_FOR(n)
 
 // RANDOMISE AND MUTATE NETWORK //
 
@@ -43,24 +45,32 @@ void mutate_network(Network *network)
 
                 if (activate)
                 {
-                    activate = false;
-                    inhibit = rand() % 3 == 0;
+                    UNSET_BIT(network->activations[i][j], n);
+
+                    if (rand() % 3 == 0)
+                        SET_BIT(network->inhibitions[i][j], n);
+                    else
+                        UNSET_BIT(network->inhibitions[i][j], n);
                 }
                 else if (inhibit)
                 {
-                    activate = rand() % 3 == 0;
-                    inhibit = false;
+                    UNSET_BIT(network->inhibitions[i][j], n);
+
+                    if (rand() % 3 == 0)
+                        SET_BIT(network->activations[i][j], n);
+                    else
+                        UNSET_BIT(network->activations[i][j], n);
+                }
+                else if (rand() % 2 == 0)
+                {
+                    SET_BIT(network->activations[i][j], n);
+                    UNSET_BIT(network->inhibitions[i][j], n);
                 }
                 else
                 {
-                    activate = rand() % 2 == 0;
-                    inhibit = !activate;
+                    SET_BIT(network->inhibitions[i][j], n);
+                    UNSET_BIT(network->activations[i][j], n);
                 }
-
-                if (activate)
-                    network->activations[i][j] ^= BITMASK_FOR(n);
-                if (inhibit)
-                    network->inhibitions[i][j] ^= BITMASK_FOR(n);
             }
         }
     }

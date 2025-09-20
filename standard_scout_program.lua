@@ -203,7 +203,7 @@ for iteration = 1, 128 do
         is_above and above.name:sub(11):upper() or "AIR", ",",
         is_below and below.name:sub(11):upper() or "AIR", ",",
         action, ",",
-        success, "\n")
+        tostring(success), "\n")
 
     net_log:write(node_as_num(1))
     for i = 2, network.nodes do

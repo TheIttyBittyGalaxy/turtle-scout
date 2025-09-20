@@ -71,7 +71,7 @@ typedef struct
 void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     size_t next_node = 0;
-    (*values)[next_node++] = true;
+    set_network_value(values, next_node++, true);
     set_network_block_inputs(values, environment, &next_node, get_block_in_front_of_scout(environment));
     set_network_block_inputs(values, environment, &next_node, get_block_above_scout(environment));
     set_network_block_inputs(values, environment, &next_node, get_block_below_scout(environment));
@@ -83,7 +83,7 @@ Action determine_network_action(const NetworkValues network_values)
     for (size_t i = 1; i < NUM_OF_ACTION; i++)
     {
         size_t n = NUM_OF_NODES - i;
-        if (network_values[n])
+        if (get_network_value(network_values, n))
             return (Action)i;
     }
 
@@ -210,9 +210,9 @@ void initialise_simulation(const Network network, const Environment environment)
     simulation_iteration = 0;
 
 #ifdef LOG_NETWORK
-    fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);
+    fprintf(network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%d", simulation_network_values[i] ? 1 : 0);
+        fprintf(network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
     fprintf(network_log, "\n");
 #endif
 }
@@ -276,9 +276,9 @@ inline void iterate_simulation_and_log(const Network network)
             success ? "true" : "false");
 
 #ifdef LOG_NETWORK
-    fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);
+    fprintf(network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%d", simulation_network_values[i] ? 1 : 0);
+        fprintf(network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
     fprintf(network_log, "\n");
 #endif
 

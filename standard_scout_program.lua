@@ -15,9 +15,12 @@ local Actions = {
 }
 
 -- NETWORK
-local network = {}
 local node = {}
 local result = {}
+
+local node_count = 0
+local activations = {}
+local inhibitions = {}
 
 do
     local byte_file = io.open("network.bytes", "rb")
@@ -25,41 +28,37 @@ do
         error("Could not open network.bytes")
     end
 
-    local function read_unsigned_int()
-        local bytes = byte_file:read(8)
-        return string.unpack("I8", bytes)
+    local header = byte_file:read(8)
+    local num_clusters, cluster_size = string.unpack("<I4I4", header)
+    node_count = num_clusters * cluster_size
+
+    local function bit_is_set(value, bit)
+        return math.floor(value / (2 ^ bit)) % 2 == 1
     end
 
-    local function read_bool_array(n)
-        local array = {}
-        for i = 1, n do
-            local byte = byte_file:read(1)
-            local value = string.unpack("B", byte)
-            array[i] = value ~= 0
+    local function read_connections(connection)
+        for i = 1, node_count do
+            connection[i] = {}
+            for cluster = 1, num_clusters do
+                local data = byte_file:read(cluster_size / 8)
+                for byte_index = 1, #data do
+                    local byte = data:byte(byte_index)
+                    for bit = 0, 7 do
+                        local j = (cluster - 1) * cluster_size + (byte_index - 1) * 8 + bit + 1
+                        connection[i][j] = bit_is_set(byte, bit)
+                    end
+                end
+            end
         end
-        return array
     end
 
-    local nodes = read_unsigned_int()
-
-    local activations = {}
-    for i = 1, nodes do
-        activations[i] = read_bool_array(nodes)
-    end
-
-    local inhibitions = {}
-    for i = 1, nodes do
-        inhibitions[i] = read_bool_array(nodes)
-    end
-
-    network.nodes = nodes
-    network.activations = activations
-    network.inhibitions = inhibitions
+    read_connections(activations)
+    read_connections(inhibitions)
 
     byte_file:close()
 end
 
-for i = 1, network.nodes do
+for i = 1, node_count do
     node[i] = false
     result[i] = false
 end
@@ -84,7 +83,7 @@ local function node_as_num(i)
 end
 
 net_log:write(node_as_num(1))
-for i = 2, network.nodes do
+for i = 2, node_count do
     net_log:write(",", node_as_num(i))
 end
 net_log:write("\n")
@@ -119,16 +118,16 @@ for iteration = 1, 128 do
     node[16] = is_below and below.name == "minecraft:oak_leaves"
 
     -- Calculate results
-    for i = 1, network.nodes do
+    for i = 1, node_count do
         local value = false
-        for j = 1, network.nodes do
+        for j = 1, node_count do
             if node[j] then
-                if network.inhibitions[j][i] then
+                if inhibitions[i][j] then
                     value = false
                     break
                 end
 
-                if network.activations[j][i] then
+                if activations[i][j] then
                     value = true
                 end
             end
@@ -140,10 +139,8 @@ for iteration = 1, 128 do
 
     -- Determine next action
     local action = "IDLE"
-    local highest_activation = 0
-
     for i = 2, #Actions do
-        local n = (network.nodes - i) + 2
+        local n = (node_count - i) + 2
         if node[n] then
             action = Actions[i]
             break
@@ -206,7 +203,7 @@ for iteration = 1, 128 do
         tostring(success), "\n")
 
     net_log:write(node_as_num(1))
-    for i = 2, network.nodes do
+    for i = 2, node_count do
         net_log:write(",", node_as_num(i))
     end
     net_log:write("\n")

@@ -148,16 +148,13 @@ void save_network(const Network network)
 {
     FILE *f = fopen("save/network.bytes", "wb");
 
-    // FIXME: Save into a format the lua script can understand
+    uint32_t clusters = NUM_OF_CLUSTERS;
+    uint32_t nodes_in_cluster = NODES_IN_CLUSTER;
+    fwrite(&clusters, sizeof(uint32_t), 1, f);
+    fwrite(&nodes_in_cluster, sizeof(uint32_t), 1, f);
 
-    // uint64_t count = NUM_OF_NODES;
-    // fwrite(&count, sizeof(uint64_t), 1, f);
-
-    // for (size_t i = 0; i < NUM_OF_NODES; ++i)
-    //     fwrite(network.activations[i], sizeof(bool), NUM_OF_NODES, f);
-
-    // for (size_t i = 0; i < NUM_OF_NODES; ++i)
-    //     fwrite(network.inhibitions[i], sizeof(bool), NUM_OF_NODES, f);
+    fwrite(network.activations, sizeof(uint64_t), NUM_OF_NODES * NUM_OF_CLUSTERS, f);
+    fwrite(network.inhibitions, sizeof(uint64_t), NUM_OF_NODES * NUM_OF_CLUSTERS, f);
 
     fclose(f);
 }

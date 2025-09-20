@@ -90,23 +90,23 @@ Action determine_network_action(const NetworkValues network_values)
     return IDLE;
 }
 
-void perform_action(Environment *environment, const Action action, Statistics *stats)
+bool perform_action(Environment *environment, const Action action, Statistics *stats)
 {
     // IDLE
     if (action == IDLE)
-        return;
+        return true;
 
     // TURN
     if (action == TURN_LEFT)
     {
         environment->scout.facing = left_of(environment->scout.facing);
-        return;
+        return true;
     }
 
     if (action == TURN_RIGHT)
     {
         environment->scout.facing = right_of(environment->scout.facing);
-        return;
+        return true;
     }
 
     // MOVE
@@ -127,12 +127,12 @@ void perform_action(Environment *environment, const Action action, Statistics *s
         }
         else
         {
-            return; // Could not move
+            return false; // Could not move
         }
 
         stats->stat[MOVED]++;
 
-        return;
+        return true;
     }
 
     // DIG
@@ -158,11 +158,11 @@ void perform_action(Environment *environment, const Action action, Statistics *s
 
         Block block = get_block(*environment, x, y, z);
         if (block == AIR)
-            return;
+            return false;
 
         set_block(environment, x, y, z, AIR);
         perform_dig_action(environment, stats, block);
-        return;
+        return true;
     }
 
     UNREACHABLE;
@@ -264,15 +264,16 @@ inline void iterate_simulation_and_log(const Network network)
     set_network_inputs(&simulation_network_values, simulation_environment);
 #endif
 
-    perform_action(&simulation_environment, action, &simulation_statistics);
+    bool success = perform_action(&simulation_environment, action, &simulation_statistics);
 
     fprintf(simulation_log,
-            "%d,%s,%s,%s,%s\n",
+            "%d,%s,%s,%s,%s,%s\n",
             simulation_iteration,
             block_to_string(front),
             block_to_string(above),
             block_to_string(below),
-            action_as_string(action));
+            action_as_string(action),
+            success ? "true" : "false");
 
 #ifdef LOG_NETWORK
     fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);

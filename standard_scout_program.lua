@@ -151,6 +151,7 @@ for iteration = 1, 128 do
     end
 
     -- Perform action
+    local success = true
     if action == "IDLE" then
         -- Pass
 
@@ -160,18 +161,18 @@ for iteration = 1, 128 do
         turtle.turnRight()
 
     elseif action == "MOVE" then
-        turtle.forward()
+        success = turtle.forward()
     elseif action == "MOVE_UP" then
-        turtle.up()
+        success = turtle.up()
     elseif action == "MOVE_DOWN" then
-        turtle.down()
+        success = turtle.down()
 
     elseif action == "DIG" then
-        turtle.dig()
+        success = turtle.dig()
     elseif action == "DIG_UP" then
-        turtle.digUp()
+        success = turtle.digUp()
     elseif action == "DIG_DOWN" then
-        turtle.digDown()
+        success = turtle.digDown()
     end
 
     -- TODO: Generate this in generate.lua
@@ -201,7 +202,8 @@ for iteration = 1, 128 do
         is_front and front.name:sub(11):upper() or "AIR", ",",
         is_above and above.name:sub(11):upper() or "AIR", ",",
         is_below and below.name:sub(11):upper() or "AIR", ",",
-        action, "\n")
+        action, ",",
+        success, "\n")
 
     net_log:write(node_as_num(1))
     for i = 2, network.nodes do

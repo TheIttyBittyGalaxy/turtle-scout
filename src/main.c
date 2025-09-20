@@ -438,6 +438,7 @@ int main(int argc, char const *argv[])
             for (int gz = -1; gz <= 1; gz++)
                 standard_environment.segment[i++] = generate_segment(gx, gy, gz);
 
+    set_block(&standard_environment, 1, 15, 0, DIRT);
     for (int y = 16; y <= 22; y++)
     {
         set_block(&standard_environment, 1, y, 0, OAK_LOG);

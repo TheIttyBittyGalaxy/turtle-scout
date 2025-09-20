@@ -2,14 +2,13 @@
 
 #include "generated.h"
 
-size_t set_network_block_inputs(NetworkValues *values, const Environment environment, size_t next_node, Block block)
+void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Block block)
 {
-    (*values)[next_node++] = block == STONE;
-    (*values)[next_node++] = block == DIRT;
-    (*values)[next_node++] = block == GRASS_BLOCK;
-    (*values)[next_node++] = block == OAK_LOG;
-    (*values)[next_node++] = block == OAK_LEAVES;
-    return next_node;
+    set_network_value(values, (*next_node)++, block == STONE);
+    set_network_value(values, (*next_node)++, block == DIRT);
+    set_network_value(values, (*next_node)++, block == GRASS_BLOCK);
+    set_network_value(values, (*next_node)++, block == OAK_LOG);
+    set_network_value(values, (*next_node)++, block == OAK_LEAVES);
 }
 
 void perform_dig_action(Environment* environment, Statistics* stats, Block block)

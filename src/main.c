@@ -72,9 +72,9 @@ void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     size_t next_node = 0;
     (*values)[next_node++] = true;
-    next_node = set_network_block_inputs(values, environment, next_node, get_block_in_front_of_scout(environment));
-    next_node = set_network_block_inputs(values, environment, next_node, get_block_above_scout(environment));
-    next_node = set_network_block_inputs(values, environment, next_node, get_block_below_scout(environment));
+    set_network_block_inputs(values, environment, &next_node, get_block_in_front_of_scout(environment));
+    set_network_block_inputs(values, environment, &next_node, get_block_above_scout(environment));
+    set_network_block_inputs(values, environment, &next_node, get_block_below_scout(environment));
 }
 
 Action determine_network_action(const NetworkValues network_values)

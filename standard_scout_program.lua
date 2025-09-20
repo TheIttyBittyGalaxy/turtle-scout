@@ -174,6 +174,27 @@ for iteration = 1, 128 do
         turtle.digDown()
     end
 
+    -- TODO: Generate this in generate.lua
+    node[1] = true
+
+    node[2] = is_front and front.name == "minecraft:stone"
+    node[3] = is_front and front.name == "minecraft:dirt"
+    node[4] = is_front and front.name == "minecraft:grass_block"
+    node[5] = is_front and front.name == "minecraft:oak_log"
+    node[6] = is_front and front.name == "minecraft:oak_leaves"
+
+    node[7] = is_above and above.name == "minecraft:stone"
+    node[8] = is_above and above.name == "minecraft:dirt"
+    node[9] = is_above and above.name == "minecraft:grass_block"
+    node[10] = is_above and above.name == "minecraft:oak_log"
+    node[11] = is_above and above.name == "minecraft:oak_leaves"
+
+    node[12] = is_below and below.name == "minecraft:stone"
+    node[13] = is_below and below.name == "minecraft:dirt"
+    node[14] = is_below and below.name == "minecraft:grass_block"
+    node[15] = is_below and below.name == "minecraft:oak_log"
+    node[16] = is_below and below.name == "minecraft:oak_leaves"
+
     -- Log
     log:write(
         iteration - 1, ",",

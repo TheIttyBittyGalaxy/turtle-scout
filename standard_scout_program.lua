@@ -30,44 +30,38 @@ do
         return string.unpack("I8", bytes)
     end
 
-    local function read_double_array(n)
+    local function read_bool_array(n)
         local array = {}
         for i = 1, n do
-            local bytes = byte_file:read(8)
-            array[i] = string.unpack("d", bytes)
+            local byte = byte_file:read(1)
+            local value = string.unpack("B", byte)
+            array[i] = value ~= 0
         end
         return array
     end
 
     local nodes = read_unsigned_int()
-    local bias = read_double_array(nodes)
-    local weight = {}
+
+    local activations = {}
     for i = 1, nodes do
-        weight[i] = read_double_array(nodes)
+        activations[i] = read_bool_array(nodes)
+    end
+
+    local inhibitions = {}
+    for i = 1, nodes do
+        inhibitions[i] = read_bool_array(nodes)
     end
 
     network.nodes = nodes
-    network.bias = bias
-    network.weight = weight
+    network.activations = activations
+    network.inhibitions = inhibitions
 
     byte_file:close()
 end
 
-
--- local function activation(x)
---     if (x > 1) then return 1 end
---     if (x < -1) then return -1 end
---     return x
--- end
-
-local function activation(x)
-    if (x > 0) then return 1 end
-    return 0
-end
-
 for i = 1, network.nodes do
-    node[i] = activation(network.bias[i])
-    result[i] = 0
+    node[i] = false
+    result[i] = false
 end
 
 -- MAIN LOOP
@@ -81,9 +75,17 @@ if not net_log then
     error("Could not open cc_net_log.csv for writing.")
 end
 
-net_log:write(node[1])
+local function node_as_num(i)
+    if node[i] then
+        return "1"
+    else
+        return "0"
+    end
+end
+
+net_log:write(node_as_num(1))
 for i = 2, network.nodes do
-    net_log:write(",", node[i])
+    net_log:write(",", node_as_num(i))
 end
 net_log:write("\n")
 
@@ -96,31 +98,42 @@ for iteration = 1, 128 do
     local is_below, below = turtle.inspectDown()
 
     -- TODO: Generate this in generate.lua
-    node[1] = is_front and front.name == "minecraft:stone" and 1 or 0
-    node[2] = is_front and front.name == "minecraft:dirt" and 1 or 0
-    node[3] = is_front and front.name == "minecraft:grass_block" and 1 or 0
-    node[4] = is_front and front.name == "minecraft:oak_log" and 1 or 0
-    node[5] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
+    node[1] = true
 
-    node[6] = is_above and above.name == "minecraft:stone" and 1 or 0
-    node[7] = is_above and above.name == "minecraft:dirt" and 1 or 0
-    node[8] = is_above and above.name == "minecraft:grass_block" and 1 or 0
-    node[9] = is_above and above.name == "minecraft:oak_log" and 1 or 0
-    node[10] = is_above and above.name == "minecraft:oak_leaves" and 1 or 0
+    node[2] = is_front and front.name == "minecraft:stone"
+    node[3] = is_front and front.name == "minecraft:dirt"
+    node[4] = is_front and front.name == "minecraft:grass_block"
+    node[5] = is_front and front.name == "minecraft:oak_log"
+    node[6] = is_front and front.name == "minecraft:oak_leaves"
 
-    node[11] = is_below and below.name == "minecraft:stone" and 1 or 0
-    node[12] = is_below and below.name == "minecraft:dirt" and 1 or 0
-    node[13] = is_below and below.name == "minecraft:grass_block" and 1 or 0
-    node[14] = is_below and below.name == "minecraft:oak_log" and 1 or 0
-    node[15] = is_below and below.name == "minecraft:oak_leaves" and 1 or 0
+    node[7] = is_above and above.name == "minecraft:stone"
+    node[8] = is_above and above.name == "minecraft:dirt"
+    node[9] = is_above and above.name == "minecraft:grass_block"
+    node[10] = is_above and above.name == "minecraft:oak_log"
+    node[11] = is_above and above.name == "minecraft:oak_leaves"
+
+    node[12] = is_below and below.name == "minecraft:stone"
+    node[13] = is_below and below.name == "minecraft:dirt"
+    node[14] = is_below and below.name == "minecraft:grass_block"
+    node[15] = is_below and below.name == "minecraft:oak_log"
+    node[16] = is_below and below.name == "minecraft:oak_leaves"
 
     -- Calculate results
     for i = 1, network.nodes do
-        local value = network.bias[i]
+        local value = false
         for j = 1, network.nodes do
-            value = value + node[j] * network.weight[j][i]
+            if node[j] then
+                if network.inhibitions[j][i] then
+                    value = false
+                    break
+                end
+
+                if network.activations[j][i] then
+                    value = true
+                end
+            end
         end
-        result[i] = activation(value)
+        result[i] = value
     end
 
     node, result = result, node
@@ -131,13 +144,14 @@ for iteration = 1, 128 do
 
     for i = 2, #Actions do
         local n = (network.nodes - i) + 2
-        if node[n] > highest_activation then
+        if node[n] then
             action = Actions[i]
-            highest_activation = node[n]
+            break
         end
     end
 
     -- Perform action
+    local success = true
     if action == "IDLE" then
         -- Pass
 
@@ -147,19 +161,40 @@ for iteration = 1, 128 do
         turtle.turnRight()
 
     elseif action == "MOVE" then
-        turtle.forward()
+        success = turtle.forward()
     elseif action == "MOVE_UP" then
-        turtle.up()
+        success = turtle.up()
     elseif action == "MOVE_DOWN" then
-        turtle.down()
+        success = turtle.down()
 
     elseif action == "DIG" then
-        turtle.dig()
+        success = turtle.dig()
     elseif action == "DIG_UP" then
-        turtle.digUp()
+        success = turtle.digUp()
     elseif action == "DIG_DOWN" then
-        turtle.digDown()
+        success = turtle.digDown()
     end
+
+    -- TODO: Generate this in generate.lua
+    node[1] = true
+
+    node[2] = is_front and front.name == "minecraft:stone"
+    node[3] = is_front and front.name == "minecraft:dirt"
+    node[4] = is_front and front.name == "minecraft:grass_block"
+    node[5] = is_front and front.name == "minecraft:oak_log"
+    node[6] = is_front and front.name == "minecraft:oak_leaves"
+
+    node[7] = is_above and above.name == "minecraft:stone"
+    node[8] = is_above and above.name == "minecraft:dirt"
+    node[9] = is_above and above.name == "minecraft:grass_block"
+    node[10] = is_above and above.name == "minecraft:oak_log"
+    node[11] = is_above and above.name == "minecraft:oak_leaves"
+
+    node[12] = is_below and below.name == "minecraft:stone"
+    node[13] = is_below and below.name == "minecraft:dirt"
+    node[14] = is_below and below.name == "minecraft:grass_block"
+    node[15] = is_below and below.name == "minecraft:oak_log"
+    node[16] = is_below and below.name == "minecraft:oak_leaves"
 
     -- Log
     log:write(
@@ -167,11 +202,12 @@ for iteration = 1, 128 do
         is_front and front.name:sub(11):upper() or "AIR", ",",
         is_above and above.name:sub(11):upper() or "AIR", ",",
         is_below and below.name:sub(11):upper() or "AIR", ",",
-        action, "\n")
+        action, ",",
+        tostring(success), "\n")
 
-    net_log:write(node[1])
+    net_log:write(node_as_num(1))
     for i = 2, network.nodes do
-        net_log:write(",", node[i])
+        net_log:write(",", node_as_num(i))
     end
     net_log:write("\n")
 

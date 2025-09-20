@@ -71,6 +71,7 @@ typedef struct
 void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     size_t next_node = 0;
+    (*values)[next_node++] = true;
     next_node = set_network_block_inputs(values, environment, next_node, get_block_in_front_of_scout(environment));
     next_node = set_network_block_inputs(values, environment, next_node, get_block_above_scout(environment));
     next_node = set_network_block_inputs(values, environment, next_node, get_block_below_scout(environment));
@@ -78,40 +79,34 @@ void set_network_inputs(NetworkValues *values, const Environment environment)
 
 Action determine_network_action(const NetworkValues network_values)
 {
-    Action action = IDLE;
-    double highest_activation = 0;
-
+    // TODO: Select a random active node at random(???)
     for (size_t i = 1; i < NUM_OF_ACTION; i++)
     {
         size_t n = NUM_OF_NODES - i;
-        double activation = network_values[n];
-        if (activation > highest_activation)
-        {
-            action = (Action)i;
-            highest_activation = activation;
-        }
+        if (network_values[n])
+            return (Action)i;
     }
 
-    return action;
+    return IDLE;
 }
 
-void perform_action(Environment *environment, const Action action, Statistics *stats)
+bool perform_action(Environment *environment, const Action action, Statistics *stats)
 {
     // IDLE
     if (action == IDLE)
-        return;
+        return true;
 
     // TURN
     if (action == TURN_LEFT)
     {
         environment->scout.facing = left_of(environment->scout.facing);
-        return;
+        return true;
     }
 
     if (action == TURN_RIGHT)
     {
         environment->scout.facing = right_of(environment->scout.facing);
-        return;
+        return true;
     }
 
     // MOVE
@@ -132,12 +127,12 @@ void perform_action(Environment *environment, const Action action, Statistics *s
         }
         else
         {
-            return; // Could not move
+            return false; // Could not move
         }
 
         stats->stat[MOVED]++;
 
-        return;
+        return true;
     }
 
     // DIG
@@ -163,11 +158,11 @@ void perform_action(Environment *environment, const Action action, Statistics *s
 
         Block block = get_block(*environment, x, y, z);
         if (block == AIR)
-            return;
+            return false;
 
         set_block(environment, x, y, z, AIR);
         perform_dig_action(environment, stats, block);
-        return;
+        return true;
     }
 
     UNREACHABLE;
@@ -215,10 +210,9 @@ void initialise_simulation(const Network network, const Environment environment)
     simulation_iteration = 0;
 
 #ifdef LOG_NETWORK
-    fprintf(network_log, "I,");
-    fprintf(network_log, "%f", simulation_network_values[0]);
+    fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%f", simulation_network_values[i]);
+        fprintf(network_log, ",%d", simulation_network_values[i] ? 1 : 0);
     fprintf(network_log, "\n");
 #endif
 }
@@ -265,21 +259,26 @@ inline void iterate_simulation_and_log(const Network network)
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
     Action action = determine_network_action(simulation_network_values);
-    perform_action(&simulation_environment, action, &simulation_statistics);
+
+#ifdef LOG_NETWORK
+    set_network_inputs(&simulation_network_values, simulation_environment);
+#endif
+
+    bool success = perform_action(&simulation_environment, action, &simulation_statistics);
 
     fprintf(simulation_log,
-            "%d,%s,%s,%s,%s\n",
+            "%d,%s,%s,%s,%s,%s\n",
             simulation_iteration,
             block_to_string(front),
             block_to_string(above),
             block_to_string(below),
-            action_as_string(action));
+            action_as_string(action),
+            success ? "true" : "false");
 
 #ifdef LOG_NETWORK
-    fprintf(network_log, "%d,", simulation_iteration);
-    fprintf(network_log, "%f", simulation_network_values[0]);
+    fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%f", simulation_network_values[i]);
+        fprintf(network_log, ",%d", simulation_network_values[i] ? 1 : 0);
     fprintf(network_log, "\n");
 #endif
 

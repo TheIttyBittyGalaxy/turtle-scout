@@ -112,15 +112,15 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
     // MOVE
     if (is_move_action(action))
     {
-        if (is_up_action(action) && get_block_above_scout(*environment) == AIR)
+        if (action == MOVE_UP && get_block_above_scout(*environment) == AIR)
         {
             environment->scout.y++;
         }
-        else if (is_down_action(action) && get_block_below_scout(*environment) == AIR)
+        else if (action == MOVE_DOWN && get_block_below_scout(*environment) == AIR)
         {
             environment->scout.y--;
         }
-        else if (get_block_in_front_of_scout(*environment) == AIR)
+        else if (action == MOVE && get_block_in_front_of_scout(*environment) == AIR)
         {
             environment->scout.x += x_offset_of(environment->scout.facing);
             environment->scout.z += z_offset_of(environment->scout.facing);
@@ -142,11 +142,11 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         int y = environment->scout.y;
         int z = environment->scout.z;
 
-        if (is_up_action(action))
+        if (action == DIG_UP)
         {
             y++;
         }
-        else if (is_down_action(action))
+        else if (action == DIG_DOWN)
         {
             y--;
         }

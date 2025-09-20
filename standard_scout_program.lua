@@ -102,17 +102,17 @@ for iteration = 1, 128 do
     node[4] = is_front and front.name == "minecraft:oak_log" and 1 or 0
     node[5] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
 
-    node[6] = is_front and front.name == "minecraft:stone" and 1 or 0
-    node[7] = is_front and front.name == "minecraft:dirt" and 1 or 0
-    node[8] = is_front and front.name == "minecraft:grass_block" and 1 or 0
-    node[9] = is_front and front.name == "minecraft:oak_log" and 1 or 0
-    node[10] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
+    node[6] = is_above and above.name == "minecraft:stone" and 1 or 0
+    node[7] = is_above and above.name == "minecraft:dirt" and 1 or 0
+    node[8] = is_above and above.name == "minecraft:grass_block" and 1 or 0
+    node[9] = is_above and above.name == "minecraft:oak_log" and 1 or 0
+    node[10] = is_above and above.name == "minecraft:oak_leaves" and 1 or 0
 
-    node[11] = is_front and front.name == "minecraft:stone" and 1 or 0
-    node[12] = is_front and front.name == "minecraft:dirt" and 1 or 0
-    node[13] = is_front and front.name == "minecraft:grass_block" and 1 or 0
-    node[14] = is_front and front.name == "minecraft:oak_log" and 1 or 0
-    node[15] = is_front and front.name == "minecraft:oak_leaves" and 1 or 0
+    node[11] = is_below and below.name == "minecraft:stone" and 1 or 0
+    node[12] = is_below and below.name == "minecraft:dirt" and 1 or 0
+    node[13] = is_below and below.name == "minecraft:grass_block" and 1 or 0
+    node[14] = is_below and below.name == "minecraft:oak_log" and 1 or 0
+    node[15] = is_below and below.name == "minecraft:oak_leaves" and 1 or 0
 
     -- Calculate results
     for i = 1, network.nodes do

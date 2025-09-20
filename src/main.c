@@ -71,6 +71,7 @@ typedef struct
 void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     size_t next_node = 0;
+    (*values)[next_node++] = true;
     next_node = set_network_block_inputs(values, environment, next_node, get_block_in_front_of_scout(environment));
     next_node = set_network_block_inputs(values, environment, next_node, get_block_above_scout(environment));
     next_node = set_network_block_inputs(values, environment, next_node, get_block_below_scout(environment));
@@ -78,21 +79,15 @@ void set_network_inputs(NetworkValues *values, const Environment environment)
 
 Action determine_network_action(const NetworkValues network_values)
 {
-    Action action = IDLE;
-    double highest_activation = 0;
-
+    // TODO: Select a random active node at random(???)
     for (size_t i = 1; i < NUM_OF_ACTION; i++)
     {
         size_t n = NUM_OF_NODES - i;
-        double activation = network_values[n];
-        if (activation > highest_activation)
-        {
-            action = (Action)i;
-            highest_activation = activation;
-        }
+        if (network_values[n])
+            return (Action)i;
     }
 
-    return action;
+    return IDLE;
 }
 
 void perform_action(Environment *environment, const Action action, Statistics *stats)

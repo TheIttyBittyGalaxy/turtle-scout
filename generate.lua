@@ -142,7 +142,7 @@ local f = open("generated.c")
 f:write(
     "size_t set_network_block_inputs(NetworkValues *values, const Environment environment, size_t next_node, Block block)\n{\n")
 for _, block in ipairs(blocks) do
-    f:write("    (*values)[next_node++] = block == ", block.enum, " ? 1 : 0;\n")
+    f:write("    (*values)[next_node++] = block == ", block.enum, ";\n")
 end
 f:write("    return next_node;\n}\n\n")
 

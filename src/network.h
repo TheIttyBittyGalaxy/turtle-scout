@@ -3,12 +3,12 @@
 
 #define NUM_OF_NODES 64
 
-typedef double NetworkValues[NUM_OF_NODES];
+typedef bool NetworkValues[NUM_OF_NODES];
 
 typedef struct
 {
-    double bias[NUM_OF_NODES];
-    double weight[NUM_OF_NODES][NUM_OF_NODES]; // weight[a][b] is connection from a to b
+    bool activations[NUM_OF_NODES][NUM_OF_NODES];
+    bool inhibitions[NUM_OF_NODES][NUM_OF_NODES];
 } Network;
 
 void randomise_network(Network *network);

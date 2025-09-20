@@ -5,52 +5,55 @@
 void randomise_network(Network *network)
 {
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        network->bias[i] = rand_normal();
-
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
+    {
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            network->weight[i][j] = rand_normal();
+        {
+            bool activate = false;
+            bool inhibit = false;
+
+            if ((rand() % 16) == 0)
+                activate = true;
+            else if ((rand() % 8) == 0)
+                inhibit = true;
+
+            network->activations[i][j] = activate;
+            network->inhibitions[i][j] = inhibit;
+        }
+    }
 }
 
 void mutate_network(Network *network)
 {
-#define MUTATE(x)                     \
-    {                                 \
-        int r = rand() % 2000;        \
-        if (r < 1)                    \
-            x += rand_normal();       \
-        else if (r < 10)              \
-            x += rand_normal() / 10;  \
-        else if (r < 100)             \
-            x += rand_normal() / 100; \
-    }
-
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        MUTATE(network->bias[i])
-
-    for (size_t i = 0; i < NUM_OF_NODES; i++)
+    {
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            MUTATE(network->weight[i][j])
+        {
+            if (rand() % 25 > 0)
+                continue;
 
-#undef MUTATE
-}
+            bool activate = network->activations[i][j];
+            bool inhibit = network->inhibitions[i][j];
 
-// ACTIVATION //
+            if (activate)
+            {
+                activate = false;
+                inhibit = rand() % 3 == 0;
+            }
+            else if (inhibit)
+            {
+                activate = rand() % 3 == 0;
+                inhibit = false;
+            }
+            else
+            {
+                activate = rand() % 2 == 0;
+                inhibit = !activate;
+            }
 
-// double activation(double x)
-// {
-//     if (x > 1)
-//         return 1;
-//     if (x < -1)
-//         return -1;
-//     return x;
-// }
-
-double activation(double x)
-{
-    if (x > 0)
-        return 1;
-    return 0;
+            network->activations[i][j] = activate;
+            network->inhibitions[i][j] = inhibit;
+        }
+    }
 }
 
 // RESET VALUES //
@@ -58,7 +61,7 @@ double activation(double x)
 void reset_network_values(const Network network, NetworkValues *value)
 {
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*value)[i] = activation(network.bias[i]);
+        (*value)[i] = false;
 }
 
 // EVALUATE NETWORK //
@@ -69,13 +72,25 @@ void evaluate_network_values(const Network network, NetworkValues *value)
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
     {
-        result[i] = network.bias[i];
+        result[i] = false;
         for (size_t j = 0; j < NUM_OF_NODES; j++)
-            result[i] += (*value)[j] * network.weight[j][i];
+        {
+            if (!((*value)[j]))
+                continue;
+
+            if (network.inhibitions[j][i])
+            {
+                result[i] = false;
+                break;
+            }
+
+            if (network.activations[j][i])
+                result[i] = true;
+        }
     }
 
     for (size_t i = 0; i < NUM_OF_NODES; i++)
-        (*value)[i] = activation(result[i]);
+        (*value)[i] = result[i];
 }
 
 // SAVE NETWORK //
@@ -87,10 +102,11 @@ void save_network(const Network network)
     uint64_t count = NUM_OF_NODES;
     fwrite(&count, sizeof(uint64_t), 1, f);
 
-    fwrite(network.bias, sizeof(double), NUM_OF_NODES, f);
+    for (size_t i = 0; i < NUM_OF_NODES; ++i)
+        fwrite(network.activations[i], sizeof(bool), NUM_OF_NODES, f);
 
     for (size_t i = 0; i < NUM_OF_NODES; ++i)
-        fwrite(network.weight[i], sizeof(double), NUM_OF_NODES, f);
+        fwrite(network.inhibitions[i], sizeof(bool), NUM_OF_NODES, f);
 
     fclose(f);
 }

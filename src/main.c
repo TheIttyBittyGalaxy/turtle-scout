@@ -259,6 +259,11 @@ inline void iterate_simulation_and_log(const Network network)
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
     Action action = determine_network_action(simulation_network_values);
+
+#ifdef LOG_NETWORK
+    set_network_inputs(&simulation_network_values, simulation_environment);
+#endif
+
     perform_action(&simulation_environment, action, &simulation_statistics);
 
     fprintf(simulation_log,
@@ -270,8 +275,6 @@ inline void iterate_simulation_and_log(const Network network)
             action_as_string(action));
 
 #ifdef LOG_NETWORK
-    set_network_inputs(&simulation_network_values, simulation_environment);
-
     fprintf(network_log, "%d", simulation_network_values[0] ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
         fprintf(network_log, ",%d", simulation_network_values[i] ? 1 : 0);

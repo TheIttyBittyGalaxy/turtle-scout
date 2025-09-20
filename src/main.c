@@ -117,15 +117,15 @@ void perform_action(Environment *environment, const Action action, Statistics *s
     // MOVE
     if (is_move_action(action))
     {
-        if (is_up_action(action) && get_block_above_scout(*environment) == AIR)
+        if (action == MOVE_UP && get_block_above_scout(*environment) == AIR)
         {
             environment->scout.y++;
         }
-        else if (is_down_action(action) && get_block_below_scout(*environment) == AIR)
+        else if (action == MOVE_DOWN && get_block_below_scout(*environment) == AIR)
         {
             environment->scout.y--;
         }
-        else if (get_block_in_front_of_scout(*environment) == AIR)
+        else if (action == MOVE && get_block_in_front_of_scout(*environment) == AIR)
         {
             environment->scout.x += x_offset_of(environment->scout.facing);
             environment->scout.z += z_offset_of(environment->scout.facing);
@@ -147,11 +147,11 @@ void perform_action(Environment *environment, const Action action, Statistics *s
         int y = environment->scout.y;
         int z = environment->scout.z;
 
-        if (is_up_action(action))
+        if (action == DIG_UP)
         {
             y++;
         }
-        else if (is_down_action(action))
+        else if (action == DIG_DOWN)
         {
             y--;
         }
@@ -439,6 +439,7 @@ int main(int argc, char const *argv[])
             for (int gz = -1; gz <= 1; gz++)
                 standard_environment.segment[i++] = generate_segment(gx, gy, gz);
 
+    set_block(&standard_environment, 1, 15, 0, DIRT);
     for (int y = 16; y <= 22; y++)
     {
         set_block(&standard_environment, 1, y, 0, OAK_LOG);

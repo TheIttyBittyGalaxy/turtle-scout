@@ -40,13 +40,3 @@ bool is_dig_action(Action action)
            action == DIG_UP ||
            action == DIG_DOWN;
 }
-
-bool is_up_action(Action action)
-{
-    return action == MOVE_UP || action == DIG_UP;
-}
-
-bool is_down_action(Action action)
-{
-    return action == MOVE_DOWN || action == DIG_DOWN;
-}

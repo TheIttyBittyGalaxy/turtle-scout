@@ -154,3 +154,42 @@ end
 f:write("}\n\n")
 
 f:close()
+
+-- GENERATE scout.lua --
+
+local t = io.open("scout/scout_template.lua", "r")
+if not t then
+    error("Could not open scout/scout_template.lua for reading.")
+end
+
+local f = io.open("scout/scout.lua", "w")
+if not f then
+    error("Could not open scout/scout.lua for writing.")
+end
+
+f:write("-- This file was generated automatically by generate.lua based on the contents of scout_template.lua\n\n")
+
+for line in t:lines("L") do
+    if line == "    -- [[INSERT GENERATED CODE]]\n" then
+        f:write("    node[1] = true\n")
+        local n = 2
+
+        for _, block in ipairs(blocks) do
+            f:write("    node[" .. n .. "] = is_front and front.name == \"minecraft:", block.name, "\"\n")
+            n = n + 1
+        end
+        for _, block in ipairs(blocks) do
+            f:write("    node[" .. n .. "] = is_above and above.name == \"minecraft:", block.name, "\"\n")
+            n = n + 1
+        end
+        for _, block in ipairs(blocks) do
+            f:write("    node[" .. n .. "] = is_below and below.name == \"minecraft:", block.name, "\"\n")
+            n = n + 1
+        end
+    else
+        f:write(line)
+    end
+end
+
+t:close()
+f:close()

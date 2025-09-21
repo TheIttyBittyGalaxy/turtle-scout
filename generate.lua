@@ -137,9 +137,9 @@ local function open(path)
     return file
 end
 
--- GENERATE block.h --
+-- GENERATE item.h --
 
-local f = open("block.h")
+local f = open("item.h")
 
 f:write("typedef enum\n{")
 f:write("\n    AIR,")
@@ -153,9 +153,9 @@ f:write("const char* item_to_mc(Item item);\n")
 
 f:close()
 
--- GENERATE block.c --
+-- GENERATE item.c --
 
-local f = open("block.c")
+local f = open("item.c")
 
 f:write("const char* item_to_string(Item item) {\n")
 f:write("    if (item == AIR) return \"AIR\";\n")
@@ -242,7 +242,7 @@ f:close()
 -- GENERATE generated.h --
 local f = open("generated.h")
 
-f:write("#include \"block.h\"\n")
+f:write("#include \"item.h\"\n")
 f:write("#include \"environment.h\"\n")
 f:write("#include \"network.h\"\n")
 f:write("#include \"statistics.h\"\n")

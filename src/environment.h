@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
 
-#include "block.h"
+#include "item.h"
 #include "direction.h"
 
 //         x/y/z - The position of a block within the minecraft world

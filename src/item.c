@@ -1,6 +1,6 @@
 // This file was generated automatically by generate.lua
 
-#include "block.h"
+#include "item.h"
 
 const char* item_to_string(Item item) {
     if (item == AIR) return "AIR";

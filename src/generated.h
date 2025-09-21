@@ -3,7 +3,7 @@
 #pragma once
 #include "core.h"
 
-#include "block.h"
+#include "item.h"
 #include "environment.h"
 #include "network.h"
 #include "statistics.h"

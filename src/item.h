@@ -15,7 +15,10 @@ typedef enum
     OAK_LEAVES,
     STICK,
     APPLE,
+    DIAMOND_PICKAXE,
 } Item;
 
 const char* item_to_string(Item item);
 const char* item_to_mc(Item item);
+
+size_t stack_size_of(Item item);

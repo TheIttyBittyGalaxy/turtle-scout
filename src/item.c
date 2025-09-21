@@ -13,6 +13,7 @@ const char* item_to_string(Item item) {
     if (item == OAK_LEAVES) return "OAK_LEAVES";
     if (item == STICK) return "STICK";
     if (item == APPLE) return "APPLE";
+    if (item == DIAMOND_PICKAXE) return "DIAMOND_PICKAXE";
     UNREACHABLE;
 }
 
@@ -27,6 +28,13 @@ const char* item_to_mc(Item item) {
     if (item == OAK_LEAVES) return "minecraft:oak_leaves";
     if (item == STICK) return "minecraft:stick";
     if (item == APPLE) return "minecraft:apple";
+    if (item == DIAMOND_PICKAXE) return "minecraft:diamond_pickaxe";
     UNREACHABLE;
+}
+
+size_t stack_size_of(Item item)
+{
+    if (item == DIAMOND_PICKAXE) return 1;
+    return 64;
 }
 

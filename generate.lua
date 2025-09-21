@@ -55,6 +55,10 @@ local items = {
     {
         name = "apple",
     },
+    {
+        name = "diamond_pickaxe",
+        stack_size = 1,
+    },
 }
 
 -- GENERATE EXTRA DATA --
@@ -65,6 +69,8 @@ for i, item in ipairs(items) do
     item.id = i -- 0 is reserved for AIR
     item.enum = item.name:upper()
     item_by_name[item.name] = item
+
+    item.stack_size = item.stack_size or 64
 
     item.can_obtain_by_digging = false
 
@@ -150,6 +156,8 @@ f:write("\n} Item;\n\n")
 
 f:write("const char* item_to_string(Item item);\n")
 f:write("const char* item_to_mc(Item item);\n")
+f:write("\n")
+f:write("size_t stack_size_of(Item item);\n")
 
 f:close()
 
@@ -170,6 +178,15 @@ for _, item in ipairs(items) do
     f:write("    if (item == ", item.enum, ") return \"minecraft:", item.name, "\";\n")
 end
 f:write("    UNREACHABLE;\n}\n\n")
+
+f:write("size_t stack_size_of(Item item)\n{\n")
+for _, item in ipairs(items) do
+    if item.stack_size ~= 64 then
+        f:write("    if (item == ", item.enum, ") return ", tostring(item.stack_size), ";\n")
+    end
+end
+f:write("    return 64;\n")
+f:write("}\n\n")
 
 f:close()
 

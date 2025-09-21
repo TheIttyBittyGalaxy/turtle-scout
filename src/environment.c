@@ -193,8 +193,7 @@ bool add_to_scout_inventory(Environment *environment, Item item)
             return true;
         }
 
-        // FIXME: Use stacksize of item instead of always 64
-        if (slot->item == item && slot->qty < 64)
+        if (slot->item == item && slot->qty < stack_size_of(item))
         {
             slot->qty++;
             return true;

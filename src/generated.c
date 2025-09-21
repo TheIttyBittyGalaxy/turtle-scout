@@ -15,45 +15,64 @@ void set_network_block_inputs(NetworkValues *values, const Environment environme
 
 void perform_dig_action(Environment* environment, Statistics* stats, Item block)
 {
+    bool success;
     switch (block)
     {
     case AIR:
         return;
 
     case STONE:
-        stats->stat[COBBLESTONE_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, COBBLESTONE);
+        if (success) stats->stat[COBBLESTONE_OBTAINED_BY_MINING]++;
         break;
 
     case COBBLESTONE:
-        stats->stat[COBBLESTONE_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, COBBLESTONE);
+        if (success) stats->stat[COBBLESTONE_OBTAINED_BY_MINING]++;
         break;
 
     case DIRT:
-        stats->stat[DIRT_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, DIRT);
+        if (success) stats->stat[DIRT_OBTAINED_BY_MINING]++;
         break;
 
     case GRASS_BLOCK:
-        stats->stat[DIRT_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, DIRT);
+        if (success) stats->stat[DIRT_OBTAINED_BY_MINING]++;
         break;
 
     case OAK_SAPLING:
-        stats->stat[OAK_SAPLING_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, OAK_SAPLING);
+        if (success) stats->stat[OAK_SAPLING_OBTAINED_BY_MINING]++;
         break;
 
     case OAK_LOG:
-        stats->stat[OAK_LOG_OBTAINED_BY_MINING]++;
+        success = add_to_scout_inventory(environment, OAK_LOG);
+        if (success) stats->stat[OAK_LOG_OBTAINED_BY_MINING]++;
         break;
 
     case OAK_LEAVES:
         stats->stat[OAK_LEAVES_BROKEN]++;
         if (rand() % 100 < 1)
-            stats->stat[STICK_OBTAINED_BY_MINING]++;
+        {
+            success = add_to_scout_inventory(environment, STICK);
+            if (success) stats->stat[STICK_OBTAINED_BY_MINING]++;
+        }
         if (rand() % 100 < 1)
-            stats->stat[STICK_OBTAINED_BY_MINING]++;
+        {
+            success = add_to_scout_inventory(environment, STICK);
+            if (success) stats->stat[STICK_OBTAINED_BY_MINING]++;
+        }
         if (rand() % 100 < 5)
-            stats->stat[OAK_SAPLING_OBTAINED_BY_MINING]++;
+        {
+            success = add_to_scout_inventory(environment, OAK_SAPLING);
+            if (success) stats->stat[OAK_SAPLING_OBTAINED_BY_MINING]++;
+        }
         if (rand() % 100 < 20)
-            stats->stat[APPLE_OBTAINED_BY_MINING]++;
+        {
+            success = add_to_scout_inventory(environment, APPLE);
+            if (success) stats->stat[APPLE_OBTAINED_BY_MINING]++;
+        }
         break;
 
     }

@@ -12,10 +12,19 @@
 
 typedef struct
 {
+    Item item;
+    size_t qty;
+} InventorySlot;
+
+typedef struct
+{
     int x;
     int y;
     int z;
     Direction facing;
+
+    size_t selected_inventory_slot;
+    InventorySlot inventory[16];
 } EnvironmentScout;
 
 typedef struct
@@ -48,3 +57,5 @@ Item get_block(const Environment environment, int x, int y, int z);
 Item get_block_in_front_of_scout(const Environment environment);
 Item get_block_above_scout(const Environment environment);
 Item get_block_below_scout(const Environment environment);
+
+bool add_to_scout_inventory(Environment *environment, Item item);

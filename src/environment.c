@@ -2,11 +2,20 @@
 
 void init_environment(Environment *environment)
 {
+    // Scout
     environment->scout.x = 0;
     environment->scout.y = 0;
     environment->scout.z = 0;
     environment->scout.facing = NORTH;
 
+    environment->scout.selected_inventory_slot = 0;
+    for (size_t i = 0; i < 16; i++)
+    {
+        environment->scout.inventory[i].item = AIR;
+        environment->scout.inventory[i].qty = 0;
+    }
+
+    // Segments
     environment->count = 0;
     environment->capacity = 0;
     environment->segment = NULL;
@@ -22,11 +31,20 @@ void free_environment(Environment *environment)
 
 void copy_environment(const Environment src, Environment *dst)
 {
+    // Scout
     dst->scout.x = src.scout.x;
     dst->scout.y = src.scout.y;
     dst->scout.z = src.scout.z;
     dst->scout.facing = src.scout.facing;
 
+    dst->scout.selected_inventory_slot = src.scout.selected_inventory_slot;
+    for (size_t i = 0; i < 16; i++)
+    {
+        dst->scout.inventory[i].item = src.scout.inventory[i].item;
+        dst->scout.inventory[i].qty = src.scout.inventory[i].qty;
+    }
+
+    // Segments
     if (dst->capacity == 0)
     {
         dst->capacity = src.capacity;
@@ -68,7 +86,7 @@ void dump_environment(const Environment environment)
                 }
     }
 
-    // Turtle (without program, just for reference)
+    // Turtle (without program or inventory, just for reference)
     fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout.x, environment.scout.y, environment.scout.z);
     fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout.facing));
     fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
@@ -159,4 +177,29 @@ Item get_block_below_scout(const Environment environment)
         environment.scout.x,
         environment.scout.y - 1,
         environment.scout.z);
+}
+
+bool add_to_scout_inventory(Environment *environment, Item item)
+{
+    for (size_t offset = 0; offset < 16; offset++)
+    {
+        size_t i = (environment->scout.selected_inventory_slot + offset) % 16;
+        InventorySlot *slot = environment->scout.inventory + i;
+
+        if (slot->qty == 0)
+        {
+            slot->item = item;
+            slot->qty = 1;
+            return true;
+        }
+
+        // FIXME: Use stacksize of item instead of always 64
+        if (slot->item == item && slot->qty < 64)
+        {
+            slot->qty++;
+            return true;
+        }
+    }
+
+    return false;
 }

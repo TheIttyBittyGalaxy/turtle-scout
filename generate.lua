@@ -268,6 +268,7 @@ end
 f:write("}\n\n")
 
 f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block)\n{\n")
+f:write("    bool success;\n")
 f:write("    switch (block)\n    {\n")
 f:write("    case AIR:\n        return;\n\n")
 for _, item in ipairs(items) do
@@ -285,7 +286,8 @@ for _, item in ipairs(items) do
 
         elseif #item.drops == 1 and item.drops[1].chance == 1 then
             local drop = item_by_name[item.drops[1].name]
-            f:write("        stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
+            f:write("        success = add_to_scout_inventory(environment, ", drop.enum, ");\n")
+            f:write("        if (success) stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
             f:write("        break;\n\n")
 
         else
@@ -294,7 +296,10 @@ for _, item in ipairs(items) do
                 -- FIXME: This way of calculating the chance of an item being dropped is a bit squiffy.
                 --        It works as of writing, but might need fixing later?
                 f:write("        if (rand() % 100 < ", math.ceil(drop_data.chance * 100), ")\n")
-                f:write("            stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
+                f:write("        {\n")
+                f:write("            success = add_to_scout_inventory(environment, ", drop.enum, ");\n")
+                f:write("            if (success) stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
+                f:write("        }\n")
             end
             f:write("        break;\n\n")
         end

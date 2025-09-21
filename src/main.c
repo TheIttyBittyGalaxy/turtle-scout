@@ -386,6 +386,19 @@ void iterate_training(Population *population)
 
 // MAIN FUNCTION //
 
+size_t find_scout_with_id(const Population population, size_t scout_id)
+{
+    for (size_t i = 0; i < population.count; i++)
+    {
+        if (population.scout_id[i] == scout_id)
+        {
+            return i;
+        }
+    }
+
+    return population.count;
+}
+
 #define CMD_CHAR_LIMIT 256
 
 int main(int argc, char const *argv[])
@@ -526,25 +539,20 @@ int main(int argc, char const *argv[])
             if (cmd_arg_count == 1)
             {
                 size_t scout_id = atoi(cmd_args[0]);
-                bool found_scout = false;
-                for (size_t i = 0; i < population.count; i++)
+                size_t scout_index = find_scout_with_id(population, scout_id);
+
+                if (scout_index < population.count)
                 {
-                    if (population.scout_id[i] != scout_id)
-                        continue;
-
-                    initialise_simulation(population.scout_network[i], standard_environment);
-
+                    initialise_simulation(population.scout_network[scout_index], standard_environment);
                     open_simulation_logs();
                     for (size_t n = 0; n < 128; n++)
-                        iterate_simulation_and_log(population.scout_network[i]);
+                        iterate_simulation_and_log(population.scout_network[scout_index]);
                     close_simulation_logs();
-
-                    found_scout = true;
-                    break;
                 }
-
-                if (!found_scout)
+                else
+                {
                     printf("There is no scout in the population with ID %d.\n", scout_id);
+                }
             }
             else
             {
@@ -558,8 +566,8 @@ int main(int argc, char const *argv[])
         {
             if (cmd_arg_count == 0)
             {
-                printf("Rank |   ID | Score    | Gen\n");
-                printf("---- | ---- | -------- | ---\n");
+                printf("Rank |    ID | Score    | Gen\n");
+                printf("---- | ----- | -------- | ---\n");
                 for (size_t i = 0; i < population.count; i++)
                 {
                     if (i == population.active_count)
@@ -568,7 +576,7 @@ int main(int argc, char const *argv[])
                         printf("   | HISTORIC NOVELTY\n");
                     }
 
-                    printf("%4d | %4d | %f | %3d\n",
+                    printf("%4d | %5d | %f | %3d\n",
                            i,
                            population.scout_id[i],
                            population.scout_novelty_score[i],
@@ -578,21 +586,18 @@ int main(int argc, char const *argv[])
             else if (cmd_arg_count == 1)
             {
                 size_t scout_id = atoi(cmd_args[0]);
-                bool found_scout = false;
-                for (size_t i = 0; i < population.count; i++)
+                size_t scout_index = find_scout_with_id(population, scout_id);
+
+                if (scout_index < population.count)
                 {
-                    if (population.scout_id[i] != scout_id)
-                        continue;
-
+                    Statistics stats = population.scout_stats[scout_index];
                     for (size_t s = 0; s < NUM_OF_STATISTICS; s++)
-                        printf("%4d  %s\n", population.scout_stats[i].stat[s], stat_name_to_string((StatName)s));
-
-                    found_scout = true;
-                    break;
+                        printf("%4d  %s\n", stats.stat[s], stat_name_to_string((StatName)s));
                 }
-
-                if (!found_scout)
+                else
+                {
                     printf("There is no scout in the population with ID %d.\n", scout_id);
+                }
             }
             else
             {
@@ -608,19 +613,16 @@ int main(int argc, char const *argv[])
             if (cmd_arg_count == 1)
             {
                 size_t scout_id = atoi(cmd_args[0]);
-                bool found_scout = false;
-                for (size_t i = 0; i < population.count; i++)
+                size_t scout_index = find_scout_with_id(population, scout_id);
+
+                if (scout_index < population.count)
                 {
-                    if (population.scout_id[i] != scout_id)
-                        continue;
-
-                    save_network(population.scout_network[i]);
-                    found_scout = true;
-                    break;
+                    save_network(population.scout_network[scout_index]);
                 }
-
-                if (!found_scout)
+                else
+                {
                     printf("There is no scout in the population with ID %d.\n", scout_id);
+                }
             }
             else
             {

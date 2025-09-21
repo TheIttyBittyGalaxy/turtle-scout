@@ -146,7 +146,7 @@ bool get_network_value(const NetworkValues values, size_t node_index)
 
 void save_network(const Network network)
 {
-    FILE *f = fopen("save/network.bytes", "wb");
+    FILE *f = fopen("export/network.bytes", "wb");
 
     uint32_t clusters = NUM_OF_CLUSTERS;
     uint32_t nodes_in_cluster = NODES_IN_CLUSTER;

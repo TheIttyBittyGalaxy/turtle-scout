@@ -46,7 +46,7 @@ void copy_environment(const Environment src, Environment *dst)
 void dump_environment(const Environment environment)
 {
     FILE *f;
-    f = fopen("mcfunct/environment_dump.mcfunction", "w");
+    f = fopen("export/place_environment.mcfunction", "w");
 
     // Blocks in each segment
     for (size_t i = 0; i < environment.count; i++)

@@ -6,8 +6,6 @@
 #include "statistics.h"
 #include "generated.h"
 
-#define LOG_NETWORK
-
 // WORLD GEN //
 
 Environment standard_environment;
@@ -68,7 +66,7 @@ typedef struct
 
 // PERFORM ACTIONS //
 
-void set_network_inputs(NetworkValues *values, const Environment environment)
+inline void set_network_inputs(NetworkValues *values, const Environment environment)
 {
     size_t next_node = 0;
     set_network_value(values, next_node++, true);
@@ -189,18 +187,15 @@ double novelty_distance(const Statistics a, const Statistics b)
     return score;
 }
 
-// SIMULATE SCOUT //
-
-FILE *simulation_log = NULL;
-
-#ifdef LOG_NETWORK
-FILE *network_log = NULL;
-#endif
+// SCOUT SIMULATION //
 
 NetworkValues simulation_network_values;
 Environment simulation_environment;
 Statistics simulation_statistics;
 size_t simulation_iteration;
+
+FILE *simulation_action_log = NULL;
+FILE *simulation_network_log = NULL;
 
 void initialise_simulation(const Network network, const Environment environment)
 {
@@ -208,13 +203,6 @@ void initialise_simulation(const Network network, const Environment environment)
     copy_environment(environment, &simulation_environment);
     init_scout_stats(&simulation_statistics);
     simulation_iteration = 0;
-
-#ifdef LOG_NETWORK
-    fprintf(network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
-    for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
-    fprintf(network_log, "\n");
-#endif
 }
 
 inline void iterate_simulation(const Network network)
@@ -226,30 +214,6 @@ inline void iterate_simulation(const Network network)
     simulation_iteration++;
 }
 
-void close_simulation_log()
-{
-    if (simulation_log == NULL)
-        return;
-
-    fclose(simulation_log);
-
-#ifdef LOG_NETWORK
-    fclose(network_log);
-#endif
-}
-
-void open_simulation_log()
-{
-    if (simulation_log != NULL)
-        close_simulation_log();
-
-    simulation_log = fopen("save/simulation_log.csv", "w");
-
-#ifdef LOG_NETWORK
-    network_log = fopen("save/network_log.csv", "w");
-#endif
-}
-
 inline void iterate_simulation_and_log(const Network network)
 {
     Block front = get_block_in_front_of_scout(simulation_environment);
@@ -259,14 +223,9 @@ inline void iterate_simulation_and_log(const Network network)
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
     Action action = determine_network_action(simulation_network_values);
-
-#ifdef LOG_NETWORK
-    set_network_inputs(&simulation_network_values, simulation_environment);
-#endif
-
     bool success = perform_action(&simulation_environment, action, &simulation_statistics);
 
-    fprintf(simulation_log,
+    fprintf(simulation_action_log,
             "%d,%s,%s,%s,%s,%s\n",
             simulation_iteration,
             block_to_string(front),
@@ -275,14 +234,31 @@ inline void iterate_simulation_and_log(const Network network)
             action_as_string(action),
             success ? "true" : "false");
 
-#ifdef LOG_NETWORK
-    fprintf(network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
+    set_network_inputs(&simulation_network_values, simulation_environment);
+    fprintf(simulation_network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
     for (size_t i = 1; i < NUM_OF_NODES; i++)
-        fprintf(network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
-    fprintf(network_log, "\n");
-#endif
+        fprintf(simulation_network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
+    fprintf(simulation_network_log, "\n");
 
     simulation_iteration++;
+}
+
+void open_simulation_logs()
+{
+    simulation_action_log = fopen("export/sim_action_log.csv", "w");
+    fprintf(simulation_action_log, "#,Front,Above,Below,Action,Success\n");
+
+    simulation_network_log = fopen("export/sim_network_log.csv", "w");
+    fprintf(simulation_network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
+    for (size_t i = 1; i < NUM_OF_NODES; i++)
+        fprintf(simulation_network_log, ",%d", get_network_value(simulation_network_values, i) ? 1 : 0);
+    fprintf(simulation_network_log, "\n");
+}
+
+void close_simulation_logs()
+{
+    fclose(simulation_action_log);
+    fclose(simulation_network_log);
 }
 
 // ITERATE TRAINING //
@@ -556,12 +532,12 @@ int main(int argc, char const *argv[])
                     if (population.scout_id[i] != scout_id)
                         continue;
 
-                    open_simulation_log();
                     initialise_simulation(population.scout_network[i], standard_environment);
 
+                    open_simulation_logs();
                     for (size_t n = 0; n < 128; n++)
                         iterate_simulation_and_log(population.scout_network[i]);
-                    close_simulation_log();
+                    close_simulation_logs();
 
                     found_scout = true;
                     break;

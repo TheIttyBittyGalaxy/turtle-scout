@@ -64,14 +64,14 @@ for i = 1, node_count do
 end
 
 -- MAIN LOOP
-local log = io.open("cc_simulation_log.csv", "w")
+local log = io.open("cc_action_log.csv", "w")
 if not log then
-    error("Could not open cc_simulation_log.csv for writing.")
+    error("Could not open cc_action_log.csv for writing.")
 end
 
-local net_log = io.open("cc_net_log.csv", "w")
+local net_log = io.open("cc_network_log.csv", "w")
 if not net_log then
-    error("Could not open cc_net_log.csv for writing.")
+    error("Could not open cc_network_log.csv for writing.")
 end
 
 local function node_as_num(i)

@@ -1,6 +1,5 @@
-# Project folders
-mcfunct/
-save/
+# Exported data
+export/
 
 # Prerequisites
 *.d

@@ -3,38 +3,48 @@
 #include "item.h"
 
 const char* item_to_string(Item item) {
-    if (item == AIR) return "AIR";
-    if (item == STONE) return "STONE";
-    if (item == COBBLESTONE) return "COBBLESTONE";
-    if (item == DIRT) return "DIRT";
-    if (item == GRASS_BLOCK) return "GRASS_BLOCK";
-    if (item == OAK_SAPLING) return "OAK_SAPLING";
-    if (item == OAK_LOG) return "OAK_LOG";
-    if (item == OAK_LEAVES) return "OAK_LEAVES";
-    if (item == STICK) return "STICK";
-    if (item == APPLE) return "APPLE";
-    if (item == DIAMOND_PICKAXE) return "DIAMOND_PICKAXE";
+    switch (item)
+    {
+        case AIR:             return "AIR";
+        case STONE:           return "STONE";
+        case COBBLESTONE:     return "COBBLESTONE";
+        case DIRT:            return "DIRT";
+        case GRASS_BLOCK:     return "GRASS_BLOCK";
+        case OAK_SAPLING:     return "OAK_SAPLING";
+        case OAK_LOG:         return "OAK_LOG";
+        case OAK_LEAVES:      return "OAK_LEAVES";
+        case STICK:           return "STICK";
+        case APPLE:           return "APPLE";
+        case DIAMOND_PICKAXE: return "DIAMOND_PICKAXE";
+    }
     UNREACHABLE;
 }
 
 const char* item_to_mc(Item item) {
-    if (item == AIR) return "minecraft:air";
-    if (item == STONE) return "minecraft:stone";
-    if (item == COBBLESTONE) return "minecraft:cobblestone";
-    if (item == DIRT) return "minecraft:dirt";
-    if (item == GRASS_BLOCK) return "minecraft:grass_block";
-    if (item == OAK_SAPLING) return "minecraft:oak_sapling";
-    if (item == OAK_LOG) return "minecraft:oak_log";
-    if (item == OAK_LEAVES) return "minecraft:oak_leaves";
-    if (item == STICK) return "minecraft:stick";
-    if (item == APPLE) return "minecraft:apple";
-    if (item == DIAMOND_PICKAXE) return "minecraft:diamond_pickaxe";
+    switch (item)
+    {
+        case AIR:             return "minecraft:air";
+        case STONE:           return "minecraft:stone";
+        case COBBLESTONE:     return "minecraft:cobblestone";
+        case DIRT:            return "minecraft:dirt";
+        case GRASS_BLOCK:     return "minecraft:grass_block";
+        case OAK_SAPLING:     return "minecraft:oak_sapling";
+        case OAK_LOG:         return "minecraft:oak_log";
+        case OAK_LEAVES:      return "minecraft:oak_leaves";
+        case STICK:           return "minecraft:stick";
+        case APPLE:           return "minecraft:apple";
+        case DIAMOND_PICKAXE: return "minecraft:diamond_pickaxe";
+    }
     UNREACHABLE;
 }
 
 size_t stack_size_of(Item item)
 {
-    if (item == DIAMOND_PICKAXE) return 1;
-    return 64;
+    switch (item)
+    {
+        case AIR:             UNREACHABLE;
+        case DIAMOND_PICKAXE: return 1;
+        default:              return 64;
+    }
 }
 

@@ -92,7 +92,13 @@ for i, item in ipairs(items) do
 end
 
 -- Determine other information about items
+local longest_name = 1
+
 for i, item in ipairs(items) do
+    if #item.name > longest_name then
+        longest_name = #item.name
+    end
+
     if item.is_block then
         for d, drop in ipairs(item.drops) do
             item_by_name[drop.name].can_obtain_by_digging = true
@@ -124,6 +130,10 @@ if has_errors then
 end
 
 -- UTIL --
+
+local function pad(name)
+    return (" "):rep(longest_name - #name)
+end
 
 local function open(path)
     local file = io.open("src/" .. path, "w")
@@ -166,26 +176,33 @@ f:close()
 local f = open("item.c")
 
 f:write("const char* item_to_string(Item item) {\n")
-f:write("    if (item == AIR) return \"AIR\";\n")
+f:write("    switch (item)\n    {\n")
+f:write("        case AIR:", pad("AIR"), " return \"AIR\";\n")
 for _, item in ipairs(items) do
-    f:write("    if (item == ", item.enum, ") return \"", item.enum, "\";\n")
+    f:write("        case ", item.enum, ":", pad(item.enum), " return \"", item.enum, "\";\n")
 end
+f:write("    }\n")
 f:write("    UNREACHABLE;\n}\n\n")
 
 f:write("const char* item_to_mc(Item item) {\n")
-f:write("    if (item == AIR) return \"minecraft:air\";\n")
+f:write("    switch (item)\n    {\n")
+f:write("        case AIR:", pad("AIR"), " return \"minecraft:air\";\n")
 for _, item in ipairs(items) do
-    f:write("    if (item == ", item.enum, ") return \"minecraft:", item.name, "\";\n")
+    f:write("        case ", item.enum, ":", pad(item.enum), " return \"minecraft:", item.name, "\";\n")
 end
+f:write("    }\n")
 f:write("    UNREACHABLE;\n}\n\n")
 
 f:write("size_t stack_size_of(Item item)\n{\n")
+f:write("    switch (item)\n    {\n")
+f:write("        case AIR:", pad("AIR"), " UNREACHABLE;\n")
 for _, item in ipairs(items) do
     if item.stack_size ~= 64 then
-        f:write("    if (item == ", item.enum, ") return ", tostring(item.stack_size), ";\n")
+        f:write("        case ", item.enum, ":", pad(item.enum), " return ", tostring(item.stack_size), ";\n")
     end
 end
-f:write("    return 64;\n")
+f:write("        default:", pad("lt"), " return 64;\n")
+f:write("    }\n")
 f:write("}\n\n")
 
 f:close()
@@ -238,20 +255,22 @@ f:write("        scout_stats->stat[i] = 0;\n")
 f:write("}\n\n")
 
 f:write("const char* stat_name_to_string(StatName name) {\n")
+f:write("    switch(name)\n    {\n")
 
 for _, item in ipairs(items) do
     if item.can_obtain_by_digging then
-        f:write("    if (name == ", item.enum, "_OBTAINED_BY_MINING) return \"", item.enum, "_OBTAINED_BY_MINING\";\n")
+        f:write("        case ", item.enum, "_OBTAINED_BY_MINING: return \"", item.enum, "_OBTAINED_BY_MINING\";\n")
     end
 end
 
 for _, item in ipairs(items) do
     if item.broken_when_mined then
-        f:write("    if (name == ", item.enum, "_BROKEN) return \"", item.enum, "_BROKEN\";\n")
+        f:write("        case ", item.enum, "_BROKEN: return \"", item.enum, "_BROKEN\";\n")
     end
 end
 
-f:write("    if (name == MOVED) return \"MOVED\";\n")
+f:write("        case MOVED: return \"MOVED\";\n")
+f:write("    }\n")
 f:write("    UNREACHABLE;\n}\n\n")
 
 f:close()

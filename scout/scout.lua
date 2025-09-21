@@ -99,21 +99,30 @@ for iteration = 1, 128 do
     local is_below, below = turtle.inspectDown()
 
     node[1] = true
+
     node[2] = is_front and front.name == "minecraft:stone"
-    node[3] = is_front and front.name == "minecraft:dirt"
-    node[4] = is_front and front.name == "minecraft:grass_block"
-    node[5] = is_front and front.name == "minecraft:oak_log"
-    node[6] = is_front and front.name == "minecraft:oak_leaves"
-    node[7] = is_above and above.name == "minecraft:stone"
-    node[8] = is_above and above.name == "minecraft:dirt"
-    node[9] = is_above and above.name == "minecraft:grass_block"
-    node[10] = is_above and above.name == "minecraft:oak_log"
-    node[11] = is_above and above.name == "minecraft:oak_leaves"
-    node[12] = is_below and below.name == "minecraft:stone"
-    node[13] = is_below and below.name == "minecraft:dirt"
-    node[14] = is_below and below.name == "minecraft:grass_block"
-    node[15] = is_below and below.name == "minecraft:oak_log"
-    node[16] = is_below and below.name == "minecraft:oak_leaves"
+    node[3] = is_front and front.name == "minecraft:cobblestone"
+    node[4] = is_front and front.name == "minecraft:dirt"
+    node[5] = is_front and front.name == "minecraft:grass_block"
+    node[6] = is_front and front.name == "minecraft:oak_sapling"
+    node[7] = is_front and front.name == "minecraft:oak_log"
+    node[8] = is_front and front.name == "minecraft:oak_leaves"
+
+    node[9] = is_above and above.name == "minecraft:stone"
+    node[10] = is_above and above.name == "minecraft:cobblestone"
+    node[11] = is_above and above.name == "minecraft:dirt"
+    node[12] = is_above and above.name == "minecraft:grass_block"
+    node[13] = is_above and above.name == "minecraft:oak_sapling"
+    node[14] = is_above and above.name == "minecraft:oak_log"
+    node[15] = is_above and above.name == "minecraft:oak_leaves"
+
+    node[16] = is_below and below.name == "minecraft:stone"
+    node[17] = is_below and below.name == "minecraft:cobblestone"
+    node[18] = is_below and below.name == "minecraft:dirt"
+    node[19] = is_below and below.name == "minecraft:grass_block"
+    node[20] = is_below and below.name == "minecraft:oak_sapling"
+    node[21] = is_below and below.name == "minecraft:oak_log"
+    node[22] = is_below and below.name == "minecraft:oak_leaves"
 
     -- Calculate results
     for i = 1, node_count do
@@ -171,21 +180,30 @@ for iteration = 1, 128 do
     end
 
     node[1] = true
+
     node[2] = is_front and front.name == "minecraft:stone"
-    node[3] = is_front and front.name == "minecraft:dirt"
-    node[4] = is_front and front.name == "minecraft:grass_block"
-    node[5] = is_front and front.name == "minecraft:oak_log"
-    node[6] = is_front and front.name == "minecraft:oak_leaves"
-    node[7] = is_above and above.name == "minecraft:stone"
-    node[8] = is_above and above.name == "minecraft:dirt"
-    node[9] = is_above and above.name == "minecraft:grass_block"
-    node[10] = is_above and above.name == "minecraft:oak_log"
-    node[11] = is_above and above.name == "minecraft:oak_leaves"
-    node[12] = is_below and below.name == "minecraft:stone"
-    node[13] = is_below and below.name == "minecraft:dirt"
-    node[14] = is_below and below.name == "minecraft:grass_block"
-    node[15] = is_below and below.name == "minecraft:oak_log"
-    node[16] = is_below and below.name == "minecraft:oak_leaves"
+    node[3] = is_front and front.name == "minecraft:cobblestone"
+    node[4] = is_front and front.name == "minecraft:dirt"
+    node[5] = is_front and front.name == "minecraft:grass_block"
+    node[6] = is_front and front.name == "minecraft:oak_sapling"
+    node[7] = is_front and front.name == "minecraft:oak_log"
+    node[8] = is_front and front.name == "minecraft:oak_leaves"
+
+    node[9] = is_above and above.name == "minecraft:stone"
+    node[10] = is_above and above.name == "minecraft:cobblestone"
+    node[11] = is_above and above.name == "minecraft:dirt"
+    node[12] = is_above and above.name == "minecraft:grass_block"
+    node[13] = is_above and above.name == "minecraft:oak_sapling"
+    node[14] = is_above and above.name == "minecraft:oak_log"
+    node[15] = is_above and above.name == "minecraft:oak_leaves"
+
+    node[16] = is_below and below.name == "minecraft:stone"
+    node[17] = is_below and below.name == "minecraft:cobblestone"
+    node[18] = is_below and below.name == "minecraft:dirt"
+    node[19] = is_below and below.name == "minecraft:grass_block"
+    node[20] = is_below and below.name == "minecraft:oak_sapling"
+    node[21] = is_below and below.name == "minecraft:oak_log"
+    node[22] = is_below and below.name == "minecraft:oak_leaves"
 
     -- Log
     log:write(

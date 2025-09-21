@@ -7,11 +7,15 @@ typedef enum
 {
     AIR,
     STONE,
+    COBBLESTONE,
     DIRT,
     GRASS_BLOCK,
+    OAK_SAPLING,
     OAK_LOG,
     OAK_LEAVES,
+    STICK,
+    APPLE,
 } Block;
 
-const char* block_to_string(Block b);
-const char* block_to_mc(Block b);
+const char* item_to_string(Block b);
+const char* item_to_mc(Block b);

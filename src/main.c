@@ -228,9 +228,9 @@ inline void iterate_simulation_and_log(const Network network)
     fprintf(simulation_action_log,
             "%d,%s,%s,%s,%s,%s\n",
             simulation_iteration,
-            block_to_string(front),
-            block_to_string(above),
-            block_to_string(below),
+            item_to_string(front),
+            item_to_string(above),
+            item_to_string(below),
             action_as_string(action),
             success ? "true" : "false");
 

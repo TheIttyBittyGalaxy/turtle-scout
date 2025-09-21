@@ -64,7 +64,7 @@ void dump_environment(const Environment environment)
                     int x = segment.grid_x * 16 + sx;
                     int y = segment.grid_y * 16 + sy;
                     int z = segment.grid_z * 16 + sz;
-                    fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, block_to_mc(block));
+                    fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
                 }
     }
 

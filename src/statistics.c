@@ -9,11 +9,13 @@ void init_scout_stats(Statistics *scout_stats)
 }
 
 const char* stat_name_to_string(StatName name) {
-    if (name == BROKE_STONE) return "BROKE_STONE";
-    if (name == BROKE_DIRT) return "BROKE_DIRT";
-    if (name == BROKE_GRASS_BLOCK) return "BROKE_GRASS_BLOCK";
-    if (name == BROKE_OAK_LOG) return "BROKE_OAK_LOG";
-    if (name == BROKE_OAK_LEAVES) return "BROKE_OAK_LEAVES";
+    if (name == COBBLESTONE_OBTAINED_BY_MINING) return "COBBLESTONE_OBTAINED_BY_MINING";
+    if (name == DIRT_OBTAINED_BY_MINING) return "DIRT_OBTAINED_BY_MINING";
+    if (name == OAK_SAPLING_OBTAINED_BY_MINING) return "OAK_SAPLING_OBTAINED_BY_MINING";
+    if (name == OAK_LOG_OBTAINED_BY_MINING) return "OAK_LOG_OBTAINED_BY_MINING";
+    if (name == STICK_OBTAINED_BY_MINING) return "STICK_OBTAINED_BY_MINING";
+    if (name == APPLE_OBTAINED_BY_MINING) return "APPLE_OBTAINED_BY_MINING";
+    if (name == OAK_LEAVES_BROKEN) return "OAK_LEAVES_BROKEN";
     if (name == MOVED) return "MOVED";
     UNREACHABLE;
 }

@@ -1,28 +1,120 @@
--- INITIAL BLOCK DATA --
+-- ITEM DATA --
 
-local blocks = {
+local items = {
+
+    -- STONES --
     {
         name = "stone",
+        is_block = true,
+
+        drops = "cobblestone"
     },
     {
+        name = "cobblestone",
+        is_block = true,
+    },
+
+    -- DIRTS --
+    {
         name = "dirt",
+        is_block = true,
     },
     {
         name = "grass_block",
+        is_block = true,
+
+        drops = "dirt",
+    },
+
+    -- OAK TREES --
+    {
+        name = "oak_sapling",
+        is_block = true,
     },
     {
         name = "oak_log",
+        is_block = true,
     },
     {
         name = "oak_leaves",
-    }
+        is_block = true,
+
+        -- TODO: I actually don't know if these chances are supposed to be mutually exclusive or not?
+        drops = {
+            { name = "stick",       chance = 1 / 100 },
+            { name = "stick",       chance = 1 / 100 },
+            { name = "oak_sapling", chance = 1 / 20 },
+            { name = "apple",       chance = 1 / 5 },
+        }
+    },
+
+    -- MISC --
+    {
+        name = "stick",
+    },
+    {
+        name = "apple",
+    },
 }
 
 -- GENERATE EXTRA DATA --
 
-for i, block in ipairs(blocks) do
-    block.id = i -- 0 is reserved for AIR
-    block.enum = block.name:upper()
+-- Populate default values and create mapping
+local item_by_name = {}
+for i, item in ipairs(items) do
+    item.id = i -- 0 is reserved for AIR
+    item.enum = item.name:upper()
+    item_by_name[item.name] = item
+
+    item.can_obtain_by_digging = false
+
+    if item.is_block then
+        item.broken_when_mined = true
+        if item.drops == nil then
+            item.drops = { { name = item.name, chance = 1 } }
+            item.broken_when_mined = false
+
+        elseif item.drops == false then
+            item.drops = {}
+
+        elseif type(item.drops) == "string" then
+            item.drops = { { name = item.drops, chance = 1 } }
+            item.broken_when_mined = false
+
+        end
+    end
+end
+
+-- Determine other information about items
+for i, item in ipairs(items) do
+    if item.is_block then
+        for d, drop in ipairs(item.drops) do
+            item_by_name[drop.name].can_obtain_by_digging = true
+        end
+    end
+end
+
+-- VALIDATE --
+
+local function exists(name)
+    return not (item_by_name[name] == nil)
+end
+
+local has_errors = false
+for i, item in ipairs(items) do
+    if item.is_block then
+        for d, drop in ipairs(item.drops) do
+            if not exists(drop.name) then
+                has_errors = true
+                print("Block \"" ..
+                    item.name .. "\" drops \"" .. drop.name .. "\", however this item does not exist.")
+            end
+        end
+    end
+end
+
+if has_errors then
+    return
 end
 
 -- UTIL --
@@ -51,31 +143,31 @@ local f = open("block.h")
 
 f:write("typedef enum\n{")
 f:write("\n    AIR,")
-for _, block in ipairs(blocks) do
-    f:write("\n    ", block.enum, ",")
+for _, item in ipairs(items) do
+    f:write("\n    ", item.enum, ",")
 end
 f:write("\n} Block;\n\n")
 
-f:write("const char* block_to_string(Block b);\n")
-f:write("const char* block_to_mc(Block b);\n")
+f:write("const char* item_to_string(Block b);\n")
+f:write("const char* item_to_mc(Block b);\n")
 
 f:close()
 
--- GENERATE block.h --
+-- GENERATE block.c --
 
 local f = open("block.c")
 
-f:write("const char* block_to_string(Block b) {\n")
+f:write("const char* item_to_string(Block b) {\n")
 f:write("    if (b == AIR) return \"AIR\";\n")
-for _, block in ipairs(blocks) do
-    f:write("    if (b == ", block.enum, ") return \"", block.enum, "\";\n")
+for _, item in ipairs(items) do
+    f:write("    if (b == ", item.enum, ") return \"", item.enum, "\";\n")
 end
 f:write("    UNREACHABLE;\n}\n\n")
 
-f:write("const char* block_to_mc(Block b) {\n")
+f:write("const char* item_to_mc(Block b) {\n")
 f:write("    if (b == AIR) return \"minecraft:air\";\n")
-for _, block in ipairs(blocks) do
-    f:write("    if (b == ", block.enum, ") return \"minecraft:", block.name, "\";\n")
+for _, item in ipairs(items) do
+    f:write("    if (b == ", item.enum, ") return \"minecraft:", item.name, "\";\n")
 end
 f:write("    UNREACHABLE;\n}\n\n")
 
@@ -84,14 +176,31 @@ f:close()
 -- GENERATE statistics.h --
 local f = open("statistics.h")
 
-f:write("#define NUM_OF_STATISTICS ", #blocks + 1, "\n\n")
+local stat_count = 0
 
 f:write("typedef enum\n{\n")
-for _, block in ipairs(blocks) do
-    f:write("    BROKE_", block.enum, ",\n")
+
+for _, item in ipairs(items) do
+    if item.can_obtain_by_digging then
+        f:write("    ", item.enum, "_OBTAINED_BY_MINING,\n")
+        stat_count = stat_count + 1
+    end
 end
-f:write("\n    MOVED,\n")
+f:write("\n")
+
+for _, item in ipairs(items) do
+    if item.broken_when_mined then
+        f:write("    ", item.enum, "_BROKEN,\n")
+        stat_count = stat_count + 1
+    end
+end
+f:write("\n")
+
+stat_count = stat_count + 1
+f:write("    MOVED,\n")
 f:write("} StatName;\n\n")
+
+f:write("#define NUM_OF_STATISTICS ", stat_count, "\n\n")
 
 f:write("typedef struct\n{\n")
 f:write("    int stat[NUM_OF_STATISTICS];\n")
@@ -112,9 +221,19 @@ f:write("        scout_stats->stat[i] = 0;\n")
 f:write("}\n\n")
 
 f:write("const char* stat_name_to_string(StatName name) {\n")
-for _, block in ipairs(blocks) do
-    f:write("    if (name == BROKE_", block.enum, ") return \"BROKE_", block.enum, "\";\n")
+
+for _, item in ipairs(items) do
+    if item.can_obtain_by_digging then
+        f:write("    if (name == ", item.enum, "_OBTAINED_BY_MINING) return \"", item.enum, "_OBTAINED_BY_MINING\";\n")
+    end
 end
+
+for _, item in ipairs(items) do
+    if item.broken_when_mined then
+        f:write("    if (name == ", item.enum, "_BROKEN) return \"", item.enum, "_BROKEN\";\n")
+    end
+end
+
 f:write("    if (name == MOVED) return \"MOVED\";\n")
 f:write("    UNREACHABLE;\n}\n\n")
 
@@ -141,16 +260,47 @@ local f = open("generated.c")
 
 f:write(
     "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Block block)\n{\n")
-for _, block in ipairs(blocks) do
-    f:write("    set_network_value(values, (*next_node)++, block == ", block.enum, ");\n")
+for _, item in ipairs(items) do
+    if item.is_block then
+        f:write("    set_network_value(values, (*next_node)++, block == ", item.enum, ");\n")
+    end
 end
 f:write("}\n\n")
 
 f:write("void perform_dig_action(Environment* environment, Statistics* stats, Block block)\n{\n")
-f:write("    if (block == AIR) return;\n")
-for _, block in ipairs(blocks) do
-    f:write("    else if (block == ", block.enum, ") stats->stat[BROKE_", block.enum, "]++;\n")
+f:write("    switch (block)\n    {\n")
+f:write("    case AIR:\n        return;\n\n")
+for _, item in ipairs(items) do
+    if item.is_block then
+        f:write("    case ", item.enum, ":\n")
+
+        -- FIXME: This way of doing it won't work for gravel
+        -- NOTE:  May also need to make chances to how `broken_when_mined` is calculated
+        if item.broken_when_mined then
+            f:write("        stats->stat[", item.enum, "_BROKEN]++;\n")
+        end
+
+        if #item.drops == 0 then
+            f:write("        return;\n\n")
+
+        elseif #item.drops == 1 and item.drops[1].chance == 1 then
+            local drop = item_by_name[item.drops[1].name]
+            f:write("        stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
+            f:write("        break;\n\n")
+
+        else
+            for d, drop_data in ipairs(item.drops) do
+                local drop = item_by_name[drop_data.name]
+                -- FIXME: This way of calculating the chance of an item being dropped is a bit squiffy.
+                --        It works as of writing, but might need fixing later?
+                f:write("        if (rand() % 100 < ", math.ceil(drop_data.chance * 100), ")\n")
+                f:write("            stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")
+            end
+            f:write("        break;\n\n")
+        end
+    end
 end
+f:write("    }\n")
 f:write("}\n\n")
 
 f:close()
@@ -171,20 +321,30 @@ f:write("-- This file was generated automatically by generate.lua based on the c
 
 for line in t:lines("L") do
     if line == "    -- [[INSERT GENERATED CODE]]\n" then
-        f:write("    node[1] = true\n")
+        f:write("    node[1] = true\n\n")
         local n = 2
 
-        for _, block in ipairs(blocks) do
-            f:write("    node[" .. n .. "] = is_front and front.name == \"minecraft:", block.name, "\"\n")
-            n = n + 1
+        for i, item in ipairs(items) do
+            if item.is_block then
+                f:write("    node[" .. n .. "] = is_front and front.name == \"minecraft:", item.name, "\"\n")
+                n = n + 1
+            end
         end
-        for _, block in ipairs(blocks) do
-            f:write("    node[" .. n .. "] = is_above and above.name == \"minecraft:", block.name, "\"\n")
-            n = n + 1
+        f:write("\n")
+
+        for i, item in ipairs(items) do
+            if item.is_block then
+                f:write("    node[" .. n .. "] = is_above and above.name == \"minecraft:", item.name, "\"\n")
+                n = n + 1
+            end
         end
-        for _, block in ipairs(blocks) do
-            f:write("    node[" .. n .. "] = is_below and below.name == \"minecraft:", block.name, "\"\n")
-            n = n + 1
+        f:write("\n")
+
+        for i, item in ipairs(items) do
+            if item.is_block then
+                f:write("    node[" .. n .. "] = is_below and below.name == \"minecraft:", item.name, "\"\n")
+                n = n + 1
+            end
         end
     else
         f:write(line)

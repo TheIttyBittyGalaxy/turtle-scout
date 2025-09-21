@@ -2,7 +2,7 @@
 
 #include "generated.h"
 
-void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Block block)
+void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block)
 {
     set_network_value(values, (*next_node)++, block == STONE);
     set_network_value(values, (*next_node)++, block == COBBLESTONE);
@@ -13,7 +13,7 @@ void set_network_block_inputs(NetworkValues *values, const Environment environme
     set_network_value(values, (*next_node)++, block == OAK_LEAVES);
 }
 
-void perform_dig_action(Environment* environment, Statistics* stats, Block block)
+void perform_dig_action(Environment* environment, Statistics* stats, Item block)
 {
     switch (block)
     {

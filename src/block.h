@@ -15,7 +15,7 @@ typedef enum
     OAK_LEAVES,
     STICK,
     APPLE,
-} Block;
+} Item;
 
-const char* item_to_string(Block b);
-const char* item_to_mc(Block b);
+const char* item_to_string(Item item);
+const char* item_to_mc(Item item);

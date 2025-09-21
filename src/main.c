@@ -154,7 +154,7 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
             z += z_offset_of(environment->scout.facing);
         }
 
-        Block block = get_block(*environment, x, y, z);
+        Item block = get_block(*environment, x, y, z);
         if (block == AIR)
             return false;
 
@@ -216,9 +216,9 @@ inline void iterate_simulation(const Network network)
 
 inline void iterate_simulation_and_log(const Network network)
 {
-    Block front = get_block_in_front_of_scout(simulation_environment);
-    Block above = get_block_above_scout(simulation_environment);
-    Block below = get_block_below_scout(simulation_environment);
+    Item front = get_block_in_front_of_scout(simulation_environment);
+    Item above = get_block_above_scout(simulation_environment);
+    Item below = get_block_below_scout(simulation_environment);
 
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);

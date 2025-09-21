@@ -57,7 +57,7 @@ void dump_environment(const Environment environment)
             for (int sy = 0; sy < 16; sy++)
                 for (int sz = 0; sz < 16; sz++)
                 {
-                    Block block = segment.block[sx][sy][sz];
+                    Item block = segment.block[sx][sy][sz];
                     if (block == AIR)
                         continue;
 
@@ -88,7 +88,7 @@ Segment *get_segment(const Environment environment, int grid_x, int grid_y, int 
     return NULL;
 }
 
-void set_block(Environment *environment, int x, int y, int z, Block block)
+void set_block(Environment *environment, int x, int y, int z, Item block)
 {
     int sx = mod(x, 16);
     int sy = mod(y, 16);
@@ -111,7 +111,7 @@ void set_block(Environment *environment, int x, int y, int z, Block block)
     segment->block[sx][sy][sz] = block;
 }
 
-Block get_block(const Environment environment, int x, int y, int z)
+Item get_block(const Environment environment, int x, int y, int z)
 {
     int sx = mod(x, 16);
     int sy = mod(y, 16);
@@ -134,7 +134,7 @@ Block get_block(const Environment environment, int x, int y, int z)
     return segment->block[sx][sy][sz];
 }
 
-Block get_block_in_front_of_scout(const Environment environment)
+Item get_block_in_front_of_scout(const Environment environment)
 {
     return get_block(
         environment,
@@ -143,7 +143,7 @@ Block get_block_in_front_of_scout(const Environment environment)
         environment.scout.z + z_offset_of(environment.scout.facing));
 }
 
-Block get_block_above_scout(const Environment environment)
+Item get_block_above_scout(const Environment environment)
 {
     return get_block(
         environment,
@@ -152,7 +152,7 @@ Block get_block_above_scout(const Environment environment)
         environment.scout.z);
 }
 
-Block get_block_below_scout(const Environment environment)
+Item get_block_below_scout(const Environment environment)
 {
     return get_block(
         environment,

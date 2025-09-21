@@ -146,10 +146,10 @@ f:write("\n    AIR,")
 for _, item in ipairs(items) do
     f:write("\n    ", item.enum, ",")
 end
-f:write("\n} Block;\n\n")
+f:write("\n} Item;\n\n")
 
-f:write("const char* item_to_string(Block b);\n")
-f:write("const char* item_to_mc(Block b);\n")
+f:write("const char* item_to_string(Item item);\n")
+f:write("const char* item_to_mc(Item item);\n")
 
 f:close()
 
@@ -157,17 +157,17 @@ f:close()
 
 local f = open("block.c")
 
-f:write("const char* item_to_string(Block b) {\n")
-f:write("    if (b == AIR) return \"AIR\";\n")
+f:write("const char* item_to_string(Item item) {\n")
+f:write("    if (item == AIR) return \"AIR\";\n")
 for _, item in ipairs(items) do
-    f:write("    if (b == ", item.enum, ") return \"", item.enum, "\";\n")
+    f:write("    if (item == ", item.enum, ") return \"", item.enum, "\";\n")
 end
 f:write("    UNREACHABLE;\n}\n\n")
 
-f:write("const char* item_to_mc(Block b) {\n")
-f:write("    if (b == AIR) return \"minecraft:air\";\n")
+f:write("const char* item_to_mc(Item item) {\n")
+f:write("    if (item == AIR) return \"minecraft:air\";\n")
 for _, item in ipairs(items) do
-    f:write("    if (b == ", item.enum, ") return \"minecraft:", item.name, "\";\n")
+    f:write("    if (item == ", item.enum, ") return \"minecraft:", item.name, "\";\n")
 end
 f:write("    UNREACHABLE;\n}\n\n")
 
@@ -249,9 +249,9 @@ f:write("#include \"statistics.h\"\n")
 f:write("\n")
 
 f:write(
-    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Block block);\n")
+    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block);\n")
 
-f:write("void perform_dig_action(Environment* environment, Statistics* stats, Block block);")
+f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block);")
 
 f:close()
 
@@ -259,7 +259,7 @@ f:close()
 local f = open("generated.c")
 
 f:write(
-    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Block block)\n{\n")
+    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block)\n{\n")
 for _, item in ipairs(items) do
     if item.is_block then
         f:write("    set_network_value(values, (*next_node)++, block == ", item.enum, ");\n")
@@ -267,7 +267,7 @@ for _, item in ipairs(items) do
 end
 f:write("}\n\n")
 
-f:write("void perform_dig_action(Environment* environment, Statistics* stats, Block block)\n{\n")
+f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block)\n{\n")
 f:write("    switch (block)\n    {\n")
 f:write("    case AIR:\n        return;\n\n")
 for _, item in ipairs(items) do

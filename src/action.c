@@ -24,6 +24,11 @@ const char *action_as_string(const Action action)
     if (action == DIG_DOWN)
         return "DIG_DOWN";
 
+    if (action == SELECT_FIRST_SLOT)
+        return "SELECT_FIRST_SLOT";
+    if (action == SELECT_NEXT_SLOT)
+        return "SELECT_NEXT_SLOT";
+
     UNREACHABLE;
 }
 

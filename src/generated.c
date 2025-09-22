@@ -2,15 +2,18 @@
 
 #include "generated.h"
 
-void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block)
+void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item)
 {
-    set_network_value(values, (*next_node)++, block == STONE);
-    set_network_value(values, (*next_node)++, block == COBBLESTONE);
-    set_network_value(values, (*next_node)++, block == DIRT);
-    set_network_value(values, (*next_node)++, block == GRASS_BLOCK);
-    set_network_value(values, (*next_node)++, block == OAK_SAPLING);
-    set_network_value(values, (*next_node)++, block == OAK_LOG);
-    set_network_value(values, (*next_node)++, block == OAK_LEAVES);
+    set_network_value(values, (*next_node)++, item == STONE);
+    set_network_value(values, (*next_node)++, item == COBBLESTONE);
+    set_network_value(values, (*next_node)++, item == DIRT);
+    set_network_value(values, (*next_node)++, item == GRASS_BLOCK);
+    set_network_value(values, (*next_node)++, item == OAK_SAPLING);
+    set_network_value(values, (*next_node)++, item == OAK_LOG);
+    set_network_value(values, (*next_node)++, item == OAK_LEAVES);
+    set_network_value(values, (*next_node)++, item == STICK);
+    set_network_value(values, (*next_node)++, item == APPLE);
+    set_network_value(values, (*next_node)++, item == DIAMOND_PICKAXE);
 }
 
 void perform_dig_action(Environment* environment, Statistics* stats, Item block)

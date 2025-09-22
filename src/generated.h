@@ -8,5 +8,5 @@
 #include "network.h"
 #include "statistics.h"
 
-void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block);
+void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item);
 void perform_dig_action(Environment* environment, Statistics* stats, Item block);

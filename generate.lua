@@ -285,7 +285,7 @@ f:write("#include \"statistics.h\"\n")
 f:write("\n")
 
 f:write(
-    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block);\n")
+    "void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item);\n")
 
 f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block);")
 
@@ -295,11 +295,9 @@ f:close()
 local f = open("generated.c")
 
 f:write(
-    "void set_network_block_inputs(NetworkValues *values, const Environment environment, size_t *next_node, Item block)\n{\n")
+    "void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item)\n{\n")
 for _, item in ipairs(items) do
-    if item.is_block then
-        f:write("    set_network_value(values, (*next_node)++, block == ", item.enum, ");\n")
-    end
+    f:write("    set_network_value(values, (*next_node)++, item == ", item.enum, ");\n")
 end
 f:write("}\n\n")
 

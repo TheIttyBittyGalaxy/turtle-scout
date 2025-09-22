@@ -70,9 +70,20 @@ inline void set_network_inputs(NetworkValues *values, const Environment environm
 {
     size_t next_node = 0;
     set_network_value(values, next_node++, true);
-    set_network_inputs_for_item(values, environment, &next_node, get_block_in_front_of_scout(environment));
-    set_network_inputs_for_item(values, environment, &next_node, get_block_above_scout(environment));
-    set_network_inputs_for_item(values, environment, &next_node, get_block_below_scout(environment));
+
+    Item block_front = get_block_in_front_of_scout(environment);
+    set_network_inputs_for_item(values, environment, &next_node, block_front);
+
+    Item block_above = get_block_above_scout(environment);
+    set_network_inputs_for_item(values, environment, &next_node, block_above);
+
+    Item block_below = get_block_below_scout(environment);
+    set_network_inputs_for_item(values, environment, &next_node, block_below);
+
+    // TODO: What is the best way to enter the qty into the network?
+    InventorySlot slot = environment.scout.inventory[environment.scout.selected_inventory_slot];
+    Item selected = (slot.qty > 0) ? slot.item : AIR;
+    set_network_inputs_for_item(values, environment, &next_node, selected);
 }
 
 Action determine_network_action(const NetworkValues network_values)

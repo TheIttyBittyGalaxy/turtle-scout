@@ -2,7 +2,7 @@
 #include "core.h"
 
 #define NODES_IN_CLUSTER 64
-#define NUM_OF_CLUSTERS 1
+#define NUM_OF_CLUSTERS 2
 #define NUM_OF_NODES (NUM_OF_CLUSTERS * NODES_IN_CLUSTER)
 
 typedef uint64_t NetworkValues[NUM_OF_CLUSTERS];

@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
 
-#define NUM_OF_ACTION 9
+#define NUM_OF_ACTION 11
 
 typedef enum
 {
@@ -17,6 +17,9 @@ typedef enum
     DIG,
     DIG_UP,
     DIG_DOWN,
+
+    SELECT_FIRST_SLOT,
+    SELECT_NEXT_SLOT,
 } Action;
 
 const char *action_as_string(const Action action);

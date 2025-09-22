@@ -163,6 +163,19 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         return true;
     }
 
+    // INVENTORY
+    if (action == SELECT_FIRST_SLOT)
+    {
+        environment->scout.selected_inventory_slot = 0;
+        return true;
+    }
+
+    if (action == SELECT_NEXT_SLOT)
+    {
+        environment->scout.selected_inventory_slot = (environment->scout.selected_inventory_slot + 1) % 16;
+        return true;
+    }
+
     UNREACHABLE;
 }
 

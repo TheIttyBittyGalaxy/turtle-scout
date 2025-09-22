@@ -91,6 +91,22 @@ for i = 2, node_count do
 end
 net_log:write("\n")
 
+local next_node
+
+local function set_bias()
+    node[1] = true
+    next_node = 2
+end
+
+local function set_input(value)
+    node[next_node] = value
+    next_node = next_node + 1
+end
+
+local function set_inputs_for_item(item)
+    -- [[INSERT GENERATED CODE]]
+end
+
 -- while true do
 for iteration = 1, 128 do
 
@@ -98,8 +114,14 @@ for iteration = 1, 128 do
     local is_front, front = turtle.inspect()
     local is_above, above = turtle.inspectUp()
     local is_below, below = turtle.inspectDown()
+    local selected = turtle.getItemDetail()
 
-    -- [[INSERT GENERATED CODE]]
+    set_bias()
+    set_inputs_for_item(is_front and front.name or "minecraft:air")
+    set_inputs_for_item(is_above and above.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(selected and selected.name or "minecraft:air")
 
     -- Calculate results
     for i = 1, node_count do
@@ -165,7 +187,12 @@ for iteration = 1, 128 do
         success = turtle.select(slot)
     end
 
-    -- [[INSERT GENERATED CODE]]
+    set_bias()
+    set_inputs_for_item(is_front and front.name or "minecraft:air")
+    set_inputs_for_item(is_above and above.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(selected and selected.name or "minecraft:air")
 
     -- Log
     log:write(

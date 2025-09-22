@@ -360,30 +360,8 @@ f:write("-- This file was generated automatically by generate.lua based on the c
 
 for line in t:lines("L") do
     if line == "    -- [[INSERT GENERATED CODE]]\n" then
-        f:write("    node[1] = true\n\n")
-        local n = 2
-
         for i, item in ipairs(items) do
-            if item.is_block then
-                f:write("    node[" .. n .. "] = is_front and front.name == \"minecraft:", item.name, "\"\n")
-                n = n + 1
-            end
-        end
-        f:write("\n")
-
-        for i, item in ipairs(items) do
-            if item.is_block then
-                f:write("    node[" .. n .. "] = is_above and above.name == \"minecraft:", item.name, "\"\n")
-                n = n + 1
-            end
-        end
-        f:write("\n")
-
-        for i, item in ipairs(items) do
-            if item.is_block then
-                f:write("    node[" .. n .. "] = is_below and below.name == \"minecraft:", item.name, "\"\n")
-                n = n + 1
-            end
+            f:write("    set_input(item == \"minecraft:", item.name, "\")\n")
         end
     else
         f:write(line)

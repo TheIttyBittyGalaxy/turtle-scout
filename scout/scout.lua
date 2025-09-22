@@ -93,6 +93,31 @@ for i = 2, node_count do
 end
 net_log:write("\n")
 
+local next_node
+
+local function set_bias()
+    node[1] = true
+    next_node = 2
+end
+
+local function set_input(value)
+    node[next_node] = value
+    next_node = next_node + 1
+end
+
+local function set_inputs_for_item(item)
+    set_input(item == "minecraft:stone")
+    set_input(item == "minecraft:cobblestone")
+    set_input(item == "minecraft:dirt")
+    set_input(item == "minecraft:grass_block")
+    set_input(item == "minecraft:oak_sapling")
+    set_input(item == "minecraft:oak_log")
+    set_input(item == "minecraft:oak_leaves")
+    set_input(item == "minecraft:stick")
+    set_input(item == "minecraft:apple")
+    set_input(item == "minecraft:diamond_pickaxe")
+end
+
 -- while true do
 for iteration = 1, 128 do
 
@@ -100,32 +125,14 @@ for iteration = 1, 128 do
     local is_front, front = turtle.inspect()
     local is_above, above = turtle.inspectUp()
     local is_below, below = turtle.inspectDown()
+    local selected = turtle.getItemDetail()
 
-    node[1] = true
-
-    node[2] = is_front and front.name == "minecraft:stone"
-    node[3] = is_front and front.name == "minecraft:cobblestone"
-    node[4] = is_front and front.name == "minecraft:dirt"
-    node[5] = is_front and front.name == "minecraft:grass_block"
-    node[6] = is_front and front.name == "minecraft:oak_sapling"
-    node[7] = is_front and front.name == "minecraft:oak_log"
-    node[8] = is_front and front.name == "minecraft:oak_leaves"
-
-    node[9] = is_above and above.name == "minecraft:stone"
-    node[10] = is_above and above.name == "minecraft:cobblestone"
-    node[11] = is_above and above.name == "minecraft:dirt"
-    node[12] = is_above and above.name == "minecraft:grass_block"
-    node[13] = is_above and above.name == "minecraft:oak_sapling"
-    node[14] = is_above and above.name == "minecraft:oak_log"
-    node[15] = is_above and above.name == "minecraft:oak_leaves"
-
-    node[16] = is_below and below.name == "minecraft:stone"
-    node[17] = is_below and below.name == "minecraft:cobblestone"
-    node[18] = is_below and below.name == "minecraft:dirt"
-    node[19] = is_below and below.name == "minecraft:grass_block"
-    node[20] = is_below and below.name == "minecraft:oak_sapling"
-    node[21] = is_below and below.name == "minecraft:oak_log"
-    node[22] = is_below and below.name == "minecraft:oak_leaves"
+    set_bias()
+    set_inputs_for_item(is_front and front.name or "minecraft:air")
+    set_inputs_for_item(is_above and above.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(selected and selected.name or "minecraft:air")
 
     -- Calculate results
     for i = 1, node_count do
@@ -191,31 +198,12 @@ for iteration = 1, 128 do
         success = turtle.select(slot)
     end
 
-    node[1] = true
-
-    node[2] = is_front and front.name == "minecraft:stone"
-    node[3] = is_front and front.name == "minecraft:cobblestone"
-    node[4] = is_front and front.name == "minecraft:dirt"
-    node[5] = is_front and front.name == "minecraft:grass_block"
-    node[6] = is_front and front.name == "minecraft:oak_sapling"
-    node[7] = is_front and front.name == "minecraft:oak_log"
-    node[8] = is_front and front.name == "minecraft:oak_leaves"
-
-    node[9] = is_above and above.name == "minecraft:stone"
-    node[10] = is_above and above.name == "minecraft:cobblestone"
-    node[11] = is_above and above.name == "minecraft:dirt"
-    node[12] = is_above and above.name == "minecraft:grass_block"
-    node[13] = is_above and above.name == "minecraft:oak_sapling"
-    node[14] = is_above and above.name == "minecraft:oak_log"
-    node[15] = is_above and above.name == "minecraft:oak_leaves"
-
-    node[16] = is_below and below.name == "minecraft:stone"
-    node[17] = is_below and below.name == "minecraft:cobblestone"
-    node[18] = is_below and below.name == "minecraft:dirt"
-    node[19] = is_below and below.name == "minecraft:grass_block"
-    node[20] = is_below and below.name == "minecraft:oak_sapling"
-    node[21] = is_below and below.name == "minecraft:oak_log"
-    node[22] = is_below and below.name == "minecraft:oak_leaves"
+    set_bias()
+    set_inputs_for_item(is_front and front.name or "minecraft:air")
+    set_inputs_for_item(is_above and above.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(is_below and below.name or "minecraft:air")
+    set_inputs_for_item(selected and selected.name or "minecraft:air")
 
     -- Log
     log:write(

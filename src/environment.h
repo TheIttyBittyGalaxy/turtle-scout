@@ -23,6 +23,8 @@ typedef struct
     int z;
     Direction facing;
 
+    size_t fuel;
+
     size_t selected_inventory_slot;
     InventorySlot inventory[16];
 } EnvironmentScout;

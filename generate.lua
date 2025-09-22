@@ -34,6 +34,7 @@ local items = {
     {
         name = "oak_log",
         is_block = true,
+        fuel_value = 15,
     },
     {
         name = "oak_leaves",
@@ -51,6 +52,7 @@ local items = {
     -- MISC --
     {
         name = "stick",
+        -- FIXME: Do sticks have a fuel value?
     },
     {
         name = "apple",
@@ -168,6 +170,7 @@ f:write("const char* item_to_string(Item item);\n")
 f:write("const char* item_to_mc(Item item);\n")
 f:write("\n")
 f:write("size_t stack_size_of(Item item);\n")
+f:write("size_t fuel_value_of(Item item);\n")
 
 f:close()
 
@@ -202,6 +205,18 @@ for _, item in ipairs(items) do
     end
 end
 f:write("        default:", pad("lt"), " return 64;\n")
+f:write("    }\n")
+f:write("}\n\n")
+
+f:write("size_t fuel_value_of(Item item)\n{\n")
+f:write("    switch (item)\n    {\n")
+f:write("        case AIR:", pad("AIR"), " UNREACHABLE;\n")
+for _, item in ipairs(items) do
+    if item.fuel_value then
+        f:write("        case ", item.enum, ":", pad(item.enum), " return ", tostring(item.fuel_value), ";\n")
+    end
+end
+f:write("        default:", pad("lt"), " return 0;\n")
 f:write("    }\n")
 f:write("}\n\n")
 

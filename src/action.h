@@ -18,6 +18,8 @@ typedef enum
     DIG_UP,
     DIG_DOWN,
 
+    REFUEL,
+
     SELECT_FIRST_SLOT,
     SELECT_NEXT_SLOT,
 } Action;

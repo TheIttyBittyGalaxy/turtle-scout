@@ -22,3 +22,4 @@ const char* item_to_string(Item item);
 const char* item_to_mc(Item item);
 
 size_t stack_size_of(Item item);
+size_t fuel_value_of(Item item);

@@ -1,6 +1,8 @@
 -- This file was generated automatically by generate.lua based on the contents of scout_template.lua
 
 -- ACTIONS
+
+-- TODO: Add refuel action
 local Actions = {
     "IDLE",
 

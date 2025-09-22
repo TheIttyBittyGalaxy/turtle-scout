@@ -48,3 +48,12 @@ size_t stack_size_of(Item item)
     }
 }
 
+size_t fuel_value_of(Item item)
+{
+    switch (item)
+    {
+        case AIR:             UNREACHABLE;
+        default:              return 0;
+    }
+}
+

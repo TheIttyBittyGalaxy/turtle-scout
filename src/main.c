@@ -121,6 +121,9 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
     // MOVE
     if (is_move_action(action))
     {
+        if (environment->scout.fuel == 0)
+            return false;
+
         if (action == MOVE_UP && get_block_above_scout(*environment) == AIR)
         {
             environment->scout.y++;
@@ -140,7 +143,6 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         }
 
         stats->stat[MOVED]++;
-
         return true;
     }
 
@@ -171,6 +173,22 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
 
         set_block(environment, x, y, z, AIR);
         perform_dig_action(environment, stats, block);
+        return true;
+    }
+
+    // REFUEL
+    if (action == REFUEL)
+    {
+        InventorySlot *slot = &environment->scout.inventory[environment->scout.selected_inventory_slot];
+        if (slot->qty == 0)
+            return false;
+
+        if (fuel_value_of(slot->item) == 0)
+            return false;
+
+        // TODO: Track stats for burning different kinds of fuel
+        slot->qty--;
+        environment->scout.fuel++;
         return true;
     }
 

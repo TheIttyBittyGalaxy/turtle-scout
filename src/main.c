@@ -383,8 +383,38 @@ void iterate_training(Population *population)
         }
     }
 
-    // TODO: Add scouts with a particularly high novelty into the historic population
-    // NOTE: I'm not sure the best way to go about this, consult with the paper!
+    // Add the most novel scout to the archive
+    bool new_most_novel_scout = true;
+    for (size_t i = population->active_count; i < population->count; i++)
+    {
+        if (population->scout_id[0] == population->scout_id[i])
+        {
+            new_most_novel_scout = false;
+            break;
+        }
+    }
+
+    if (new_most_novel_scout)
+    {
+        // Expand the population array if required
+        if (population->capacity == population->count)
+        {
+            population->capacity += 128;
+            population->scout_id = (size_t *)realloc(population->scout_id, sizeof(size_t) * population->capacity);
+            population->scout_generation = (size_t *)realloc(population->scout_generation, sizeof(size_t) * population->capacity);
+            population->scout_network = (Network *)realloc(population->scout_network, sizeof(Network) * population->capacity);
+            population->scout_stats = (Statistics *)realloc(population->scout_stats, sizeof(Statistics) * population->capacity);
+            population->scout_novelty_score = (double *)realloc(population->scout_novelty_score, sizeof(double) * population->capacity);
+        }
+
+        // Add the novel scout to the historic population
+        population->scout_id[population->count] = population->scout_id[0];
+        population->scout_generation[population->count] = population->scout_generation[0];
+        population->scout_network[population->count] = population->scout_network[0];
+        population->scout_stats[population->count] = population->scout_stats[0];
+        population->scout_novelty_score[population->count] = population->scout_novelty_score[0];
+        population->count++;
+    }
 
     // Replace the least novel half of the population with children from the most novel
     size_t safe_count = active_count / 2;
@@ -596,8 +626,8 @@ int main(int argc, char const *argv[])
                 {
                     if (i == population.active_count)
                     {
-                        printf("   |\n");
-                        printf("   | HISTORIC NOVELTY\n");
+                        printf("     |\n");
+                        printf("     | HISTORIC NOVELTY\n");
                     }
 
                     printf("%4d | %5d | %f | %3d\n",

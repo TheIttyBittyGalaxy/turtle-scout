@@ -14,6 +14,9 @@ local Actions = {
     "DIG",
     "DIG_UP",
     "DIG_DOWN",
+
+    "SELECT_FIRST_SLOT",
+    "SELECT_NEXT_SLOT",
 }
 
 -- NETWORK
@@ -177,6 +180,15 @@ for iteration = 1, 128 do
         success = turtle.digUp()
     elseif action == "DIG_DOWN" then
         success = turtle.digDown()
+
+    elseif action == "SELECT_FIRST_SLOT" then
+        success = turtle.select(1)
+    elseif action == "SELECT_NEXT_SLOT" then
+        local slot = turtle.getSelectedSlot() + 1
+        if slot > 16 then
+            slot = 1
+        end
+        success = turtle.select(slot)
     end
 
     node[1] = true

@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
 
-#define NUM_OF_ACTION 11
+#define NUM_OF_ACTION 12
 
 typedef enum
 {

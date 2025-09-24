@@ -268,13 +268,14 @@ inline void iterate_simulation_and_log(const Network network)
     bool success = perform_action(&simulation_environment, action, &simulation_statistics);
 
     fprintf(simulation_action_log,
-            "%d,%s,%s,%s,%s,%s\n",
+            "%d,%s,%s,%s,%s,%s,%d\n",
             simulation_iteration,
             item_to_string(front),
             item_to_string(above),
             item_to_string(below),
             action_as_string(action),
-            success ? "true" : "false");
+            success ? "true" : "false",
+            simulation_environment.scout.fuel);
 
     set_network_inputs(&simulation_network_values, simulation_environment);
     fprintf(simulation_network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);
@@ -288,7 +289,7 @@ inline void iterate_simulation_and_log(const Network network)
 void open_simulation_logs()
 {
     simulation_action_log = fopen("export/sim_action_log.csv", "w");
-    fprintf(simulation_action_log, "#,Front,Above,Below,Action,Success\n");
+    fprintf(simulation_action_log, "#,Front,Above,Below,Action,Success,Fuel\n");
 
     simulation_network_log = fopen("export/sim_network_log.csv", "w");
     fprintf(simulation_network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);

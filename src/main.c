@@ -450,6 +450,9 @@ void iterate_training(Population *population)
 
 size_t find_scout_with_id(const Population population, size_t scout_id)
 {
+    if (scout_id == 0)
+        return population.count;
+
     for (size_t i = 0; i < population.count; i++)
     {
         if (population.scout_id[i] == scout_id)
@@ -510,7 +513,7 @@ int main(int argc, char const *argv[])
     population.capacity = 128;
 
     population.active_count = population.count;
-    population.next_id = population.count;
+    population.next_id = 1; // 0 indicates NULL
 
     population.scout_id = (size_t *)malloc(sizeof(size_t) * population.capacity);
     population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
@@ -522,7 +525,7 @@ int main(int argc, char const *argv[])
     printf("Creating initial population.\n");
     for (size_t i = 0; i < population.active_count; i++)
     {
-        population.scout_id[i] = i;
+        population.scout_id[i] = population.next_id++;
         population.scout_generation[i] = 0;
 
         randomise_network(population.scout_network + i);
@@ -638,11 +641,14 @@ int main(int argc, char const *argv[])
                         printf("     | HISTORIC NOVELTY\n");
                     }
 
-                    printf("%4d | %5d | %f | %3d\n",
-                           i,
-                           population.scout_id[i],
-                           population.scout_novelty_score[i],
-                           population.scout_generation[i]);
+                    if (population.scout_id[i] == 0)
+                        printf("%4d |       |          |    \n", i);
+                    else
+                        printf("%4d | %5d | %f | %3d\n",
+                               i,
+                               population.scout_id[i],
+                               population.scout_novelty_score[i],
+                               population.scout_generation[i]);
                 }
             }
             else if (cmd_arg_count == 1)

@@ -316,6 +316,20 @@ void iterate_training(Population *population)
     Statistics *scout_stats = population->scout_stats;
     double *scout_novelty_score = population->scout_novelty_score;
 
+    // Repopulate scouts, with a slight bias towards more novel scouts repopulating
+    for (size_t child = population->active_count - 1; child > 0; child--)
+    {
+        if (population->scout_id[child] != 0)
+            continue;
+
+        size_t parent = rand() % child;
+
+        population->scout_id[child] = population->next_id++;
+        population->scout_generation[child] = population->scout_generation[parent] + 1;
+        population->scout_network[child] = population->scout_network[parent];
+        mutate_network(&population->scout_network[child]);
+    }
+
     // Evaluate each scout
     for (size_t i = 0; i < active_count; i++)
     {
@@ -424,25 +438,27 @@ void iterate_training(Population *population)
         population->count++;
     }
 
-    // Replace the least novel half of the population with children from the most novel
-    size_t safe_count = active_count / 2;
-    for (size_t i = safe_count; i < active_count; i++)
+    // Eliminate scouts with lower novelty, with some random variation
+
+    // FIXME: Refactor the program so that we purge and repopulate at the start of every iteration except the first.
+
+    // FIXME: This method of eliminating scouts gives random variation while always eliminating 32 scouts.
+    //        However, it is means there is symmetry between the eliminated and non-eliminated scouts, which
+    //        is a bit strange. e.g. for scouts at index 31 and 32, always exactly one will be eliminated.
+
+    size_t elimination_target = active_count / 2;
+    for (size_t i = 0; i < elimination_target; i++)
     {
-        size_t j = rand() % safe_count;
-        population->scout_id[i] = population->next_id++;
-        population->scout_generation[i] = population->scout_generation[j] + 1;
-        population->scout_network[i] = population->scout_network[j];
-        mutate_network(&population->scout_network[i]);
+        double p = (i + 1) / (double)active_count;
+        double risk = (i > 0) // "Risk of a more novel scout being eliminated"
+                          ? 1.0 / (1.0 + exp(8 - 16 * p))
+                          : 0; // Most novel scout needs immunity or else the repopulation method does not work
 
-        // NOTE: The below isn't necessary for the program to function, but it
-        // avoids confusion in the `info` command by not showing the replaced
-        // scout's data next to the new child.
-
-        // FIXME: To avoid this refactor the program so that we purge and
-        //        repopulate at the start of every iteration except the first.
-
-        init_scout_stats(population->scout_stats + i);
-        population->scout_novelty_score[i] = 0;
+        double r = rand() / (double)(RAND_MAX - 1);
+        if (r < risk)
+            population->scout_id[i] = 0;
+        else
+            population->scout_id[population->active_count - 1 - i] = 0;
     }
 }
 

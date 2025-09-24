@@ -305,6 +305,17 @@ void close_simulation_logs()
 
 // ITERATE TRAINING //
 
+bool is_historic_scout(Population *population, size_t scout_id)
+{
+    for (size_t i = population->active_count; i < population->count; i++)
+    {
+        if (population->scout_id[i] == scout_id)
+            return true;
+    }
+
+    return false;
+}
+
 void iterate_training(Population *population)
 {
     size_t population_count = population->count;
@@ -406,17 +417,7 @@ void iterate_training(Population *population)
     }
 
     // Add the most novel scout to the archive
-    bool new_most_novel_scout = true;
-    for (size_t i = population->active_count; i < population->count; i++)
-    {
-        if (population->scout_id[0] == population->scout_id[i])
-        {
-            new_most_novel_scout = false;
-            break;
-        }
-    }
-
-    if (new_most_novel_scout)
+    if (population->scout_novelty_score[0] > 1 && !is_historic_scout(population, population->scout_id[0]))
     {
         // Expand the population array if required
         if (population->capacity == population->count)

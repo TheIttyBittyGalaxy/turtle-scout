@@ -328,16 +328,10 @@ void iterate_training(Population *population)
     // Generate novelty scores
     for (size_t i = 0; i < active_count; i++)
     {
-        // Find the 8 scouts with the most similar stats and track how similar they are
-        double nearest_scouts[8];
-        nearest_scouts[0] = DBL_MAX;
-        nearest_scouts[1] = DBL_MAX;
-        nearest_scouts[2] = DBL_MAX;
-        nearest_scouts[3] = DBL_MAX;
-        nearest_scouts[4] = DBL_MAX;
-        nearest_scouts[5] = DBL_MAX;
-        nearest_scouts[6] = DBL_MAX;
-        nearest_scouts[7] = DBL_MAX;
+        // Find the 16 scouts with the most similar stats and track how similar they are
+        double nearest_scouts[16];
+        for (size_t j = 0; j < 16; j++)
+            nearest_scouts[j] = DBL_MAX;
 
         for (size_t j = 0; j < population_count; j++)
         {
@@ -346,28 +340,24 @@ void iterate_training(Population *population)
 
             double dist = novelty_distance(scout_stats[i], scout_stats[j]);
 
-            for (size_t s = 0; s < 8; s++)
+            for (size_t s = 0; s < 16; s++)
             {
                 if (dist > nearest_scouts[s])
                     continue;
 
-                for (size_t n = 7; n > s; n--)
+                for (size_t n = 15; n > s; n--)
                     nearest_scouts[n] = nearest_scouts[n - 1];
+
                 nearest_scouts[s] = dist;
                 break;
             }
         }
 
-        // This scout's novelty score is the average of the 8 closest distances
-        double score = (nearest_scouts[0] +
-                        nearest_scouts[1] +
-                        nearest_scouts[2] +
-                        nearest_scouts[3] +
-                        nearest_scouts[4] +
-                        nearest_scouts[5] +
-                        nearest_scouts[6] +
-                        nearest_scouts[7]) /
-                       8;
+        // This scout's novelty score is the average of the 16 closest distances
+        double score = 0;
+        for (size_t j = 0; j < 16; j++)
+            score += nearest_scouts[j];
+        score /= 16;
 
         scout_novelty_score[i] = score;
     }

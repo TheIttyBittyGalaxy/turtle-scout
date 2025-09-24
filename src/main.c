@@ -422,7 +422,8 @@ void iterate_training(Population *population)
     }
 
     // Add the most novel scout to the archive
-    if (population->scout_novelty_score[0] > 1 && !is_historic_scout(population, population->scout_id[0]))
+    // TODO: What is the best way to calibrate the novelty threshold?
+    if (population->scout_novelty_score[0] > 2 && !is_historic_scout(population, population->scout_id[0]))
     {
         // Expand the population array if required
         if (population->capacity == population->count)

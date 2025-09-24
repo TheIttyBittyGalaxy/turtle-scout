@@ -8,6 +8,8 @@ void init_environment(Environment *environment)
     environment->scout.z = 0;
     environment->scout.facing = NORTH;
 
+    environment->scout.fuel = 0;
+
     environment->scout.selected_inventory_slot = 0;
     for (size_t i = 0; i < 16; i++)
     {
@@ -36,6 +38,8 @@ void copy_environment(const Environment src, Environment *dst)
     dst->scout.y = src.scout.y;
     dst->scout.z = src.scout.z;
     dst->scout.facing = src.scout.facing;
+
+    dst->scout.fuel = src.scout.fuel;
 
     dst->scout.selected_inventory_slot = src.scout.selected_inventory_slot;
     for (size_t i = 0; i < 16; i++)

@@ -143,6 +143,7 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         }
 
         stats->stat[MOVED]++;
+        environment->scout.fuel--;
         return true;
     }
 
@@ -183,12 +184,13 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         if (slot->qty == 0)
             return false;
 
+        size_t fuel_value = fuel_value_of(slot->item);
         if (fuel_value_of(slot->item) == 0)
             return false;
 
         // TODO: Track stats for burning different kinds of fuel
         slot->qty--;
-        environment->scout.fuel++;
+        environment->scout.fuel += fuel_value;
         return true;
     }
 

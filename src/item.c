@@ -53,6 +53,7 @@ size_t fuel_value_of(Item item)
     switch (item)
     {
         case AIR:             UNREACHABLE;
+        case OAK_LOG:         return 15;
         default:              return 0;
     }
 }

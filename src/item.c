@@ -54,6 +54,7 @@ size_t fuel_value_of(Item item)
     {
         case AIR:             UNREACHABLE;
         case OAK_LOG:         return 15;
+        case STICK:           return 5;
         default:              return 0;
     }
 }

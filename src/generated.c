@@ -81,3 +81,17 @@ void perform_dig_action(Environment* environment, Statistics* stats, Item block)
     }
 }
 
+void update_refuel_stat(Statistics* stats, Item item)
+{
+    switch (item)
+    {
+        case OAK_LOG:
+             stats->stat[OAK_LOG_USED_AS_FUEL]++;
+             break;
+        case STICK:
+             stats->stat[STICK_USED_AS_FUEL]++;
+             break;
+        default: UNREACHABLE;
+    }
+}
+

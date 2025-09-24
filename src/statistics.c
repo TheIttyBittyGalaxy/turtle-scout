@@ -18,6 +18,9 @@ const char* stat_name_to_string(StatName name) {
         case STICK_OBTAINED_BY_MINING: return "STICK_OBTAINED_BY_MINING";
         case APPLE_OBTAINED_BY_MINING: return "APPLE_OBTAINED_BY_MINING";
         case OAK_LEAVES_BROKEN: return "OAK_LEAVES_BROKEN";
+        case OAK_LOG_USED_AS_FUEL: return "OAK_LOG_USED_AS_FUEL";
+        case STICK_USED_AS_FUEL: return "STICK_USED_AS_FUEL";
+
         case MOVED: return "MOVED";
     }
     UNREACHABLE;

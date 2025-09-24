@@ -14,10 +14,13 @@ typedef enum
 
     OAK_LEAVES_BROKEN,
 
+    OAK_LOG_USED_AS_FUEL,
+    STICK_USED_AS_FUEL,
+
     MOVED,
 } StatName;
 
-#define NUM_OF_STATISTICS 8
+#define NUM_OF_STATISTICS 10
 
 typedef struct
 {

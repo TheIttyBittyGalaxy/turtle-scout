@@ -52,7 +52,7 @@ local items = {
     -- MISC --
     {
         name = "stick",
-        -- FIXME: Do sticks have a fuel value?
+        fuel_value = 5,
     },
     {
         name = "apple",
@@ -245,6 +245,14 @@ for _, item in ipairs(items) do
 end
 f:write("\n")
 
+for _, item in ipairs(items) do
+    if item.fuel_value then
+        f:write("    ", item.enum, "_USED_AS_FUEL,\n")
+        stat_count = stat_count + 1
+    end
+end
+f:write("\n")
+
 stat_count = stat_count + 1
 f:write("    MOVED,\n")
 f:write("} StatName;\n\n")
@@ -284,6 +292,13 @@ for _, item in ipairs(items) do
     end
 end
 
+for _, item in ipairs(items) do
+    if item.fuel_value then
+        f:write("        case ", item.enum, "_USED_AS_FUEL: return \"", item.enum, "_USED_AS_FUEL\";\n")
+    end
+end
+f:write("\n")
+
 f:write("        case MOVED: return \"MOVED\";\n")
 f:write("    }\n")
 f:write("    UNREACHABLE;\n}\n\n")
@@ -302,7 +317,9 @@ f:write("\n")
 f:write(
     "void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item);\n")
 
-f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block);")
+f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block);\n")
+
+f:write("void update_refuel_stat(Statistics* stats, Item item);\n")
 
 f:close()
 
@@ -354,6 +371,19 @@ for _, item in ipairs(items) do
         end
     end
 end
+f:write("    }\n")
+f:write("}\n\n")
+
+f:write("void update_refuel_stat(Statistics* stats, Item item)\n{\n")
+f:write("    switch (item)\n    {\n")
+for _, item in ipairs(items) do
+    if item.fuel_value then
+        f:write("        case ", item.enum, ":\n")
+        f:write("             stats->stat[", item.enum, "_USED_AS_FUEL]++;\n")
+        f:write("             break;\n")
+    end
+end
+f:write("        default: UNREACHABLE;\n")
 f:write("    }\n")
 f:write("}\n\n")
 

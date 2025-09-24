@@ -184,13 +184,15 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         if (slot->qty == 0)
             return false;
 
-        size_t fuel_value = fuel_value_of(slot->item);
+        Item fuel = slot->item;
+        size_t fuel_value = fuel_value_of(fuel);
         if (fuel_value_of(slot->item) == 0)
             return false;
 
-        // TODO: Track stats for burning different kinds of fuel
+        // FIXME: Implement a "remove item from inventory" function that will change the item back to AIR if the item is depleted
         slot->qty--;
         environment->scout.fuel += fuel_value;
+        update_refuel_stat(stats, fuel);
         return true;
     }
 

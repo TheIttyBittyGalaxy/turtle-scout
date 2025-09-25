@@ -1,17 +1,18 @@
 #pragma once
 #include "core.h"
 
+#define NUM_OF_ACTIONS 11
+
 typedef enum
 {
-    NO_INVENTORY_ACTION,
+    REFUEL,
 
     SELECT_FIRST_SLOT,
     SELECT_NEXT_SLOT,
-} InventoryAction;
 
-typedef enum
-{
-    NO_MOVE_ACTION,
+    DIG_FORWARD,
+    DIG_UP,
+    DIG_DOWN,
 
     MOVE_FORWARD,
     MOVE_UP,
@@ -19,28 +20,19 @@ typedef enum
 
     TURN_LEFT,
     TURN_RIGHT,
-} MoveAction;
+} Action;
+
+typedef enum
+{
+    OUTCOME_NONE,
+    OUTCOME_FAIL,
+    OUTCOME_PASS,
+} Outcome;
 
 typedef struct
 {
-    bool refuel_action;
-    bool refuel_success;
+    Outcome action[NUM_OF_ACTIONS];
+} ActionOutcomes;
 
-    InventoryAction inventory_action;
-    bool inventory_success;
-
-    bool dig_action;
-    bool dig_success;
-
-    bool dig_up_action;
-    bool dig_up_success;
-
-    bool dig_down_action;
-    bool dig_down_success;
-
-    MoveAction move_action;
-    bool move_success;
-} ActionResults;
-
-const char *inventory_action_as_string(const InventoryAction action);
-const char *move_action_as_string(const MoveAction action);
+const char *action_as_string(const Action action);
+const char *outcome_as_string(const Outcome outcome);

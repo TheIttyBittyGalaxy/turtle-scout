@@ -16,7 +16,7 @@ void set_network_inputs_for_item(NetworkValues *values, const Environment enviro
     set_network_value(values, (*next_node)++, item == DIAMOND_PICKAXE);
 }
 
-void perform_dig_action(Environment* environment, Statistics* stats, Item block)
+void update_dig_action(Environment* environment, Statistics* stats, Item block)
 {
     bool success;
     switch (block)
@@ -86,11 +86,11 @@ void update_refuel_stat(Statistics* stats, Item item)
     switch (item)
     {
         case OAK_LOG:
-             stats->stat[OAK_LOG_USED_AS_FUEL]++;
-             break;
+            stats->stat[OAK_LOG_USED_AS_FUEL]++;
+            break;
         case STICK:
-             stats->stat[STICK_USED_AS_FUEL]++;
-             break;
+            stats->stat[STICK_USED_AS_FUEL]++;
+            break;
         default: UNREACHABLE;
     }
 }

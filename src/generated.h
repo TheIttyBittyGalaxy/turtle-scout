@@ -9,5 +9,5 @@
 #include "statistics.h"
 
 void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item);
-void perform_dig_action(Environment* environment, Statistics* stats, Item block);
+void update_dig_action(Environment* environment, Statistics* stats, Item block);
 void update_refuel_stat(Statistics* stats, Item item);

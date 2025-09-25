@@ -86,129 +86,125 @@ inline void set_network_inputs(NetworkValues *values, const Environment environm
     set_network_inputs_for_item(values, environment, &next_node, selected);
 }
 
-Action determine_network_action(const NetworkValues network_values)
+bool perform_refuel(Environment *environment, Statistics *stats)
 {
-    // TODO: Select a random active node at random(???)
-    for (size_t i = 1; i < NUM_OF_ACTION; i++)
-    {
-        size_t n = NUM_OF_NODES - i;
-        if (get_network_value(network_values, n))
-            return (Action)i;
-    }
+    InventorySlot *slot = &environment->scout.inventory[environment->scout.selected_inventory_slot];
+    if (slot->qty == 0)
+        return false;
 
-    return IDLE;
+    Item fuel = slot->item;
+    size_t fuel_value = fuel_value_of(fuel);
+    if (fuel_value_of(slot->item) == 0)
+        return false;
+
+    decrement_increment_slot(slot);
+    environment->scout.fuel += fuel_value;
+    update_refuel_stat(stats, fuel);
+    return true;
 }
 
-bool perform_action(Environment *environment, const Action action, Statistics *stats)
+// FIXME: Don't have a bool for up and a bool for down, just have a sensible enum
+bool perform_dig(Environment *environment, Statistics *stats, bool up, bool down)
 {
-    // IDLE
-    if (action == IDLE)
-        return true;
+    int x = environment->scout.x;
+    int y = environment->scout.y;
+    int z = environment->scout.z;
 
-    // TURN
-    if (action == TURN_LEFT)
+    if (up)
     {
-        environment->scout.facing = left_of(environment->scout.facing);
-        return true;
+        y++;
+    }
+    else if (down)
+    {
+        y--;
+    }
+    else
+    {
+        x += x_offset_of(environment->scout.facing);
+        z += z_offset_of(environment->scout.facing);
     }
 
-    if (action == TURN_RIGHT)
+    Item block = get_block(*environment, x, y, z);
+    if (block == AIR)
+        return false;
+
+    set_block(environment, x, y, z, AIR);
+    update_dig_action(environment, stats, block);
+    return true;
+}
+
+// FIXME: Don't have a bool for up and a bool for down, just have a sensible enum
+bool perform_move(Environment *environment, Statistics *stats, bool up, bool down)
+{
+    if (environment->scout.fuel == 0)
+        return false;
+
+    if (up && get_block_above_scout(*environment) == AIR)
     {
-        environment->scout.facing = right_of(environment->scout.facing);
-        return true;
+        environment->scout.y++;
+    }
+    else if (down && get_block_below_scout(*environment) == AIR)
+    {
+        environment->scout.y--;
+    }
+    else if (!up && !down && get_block_in_front_of_scout(*environment) == AIR)
+    {
+        environment->scout.x += x_offset_of(environment->scout.facing);
+        environment->scout.z += z_offset_of(environment->scout.facing);
+    }
+    else
+    {
+        return false;
     }
 
-    // MOVE
-    if (is_move_action(action))
-    {
-        if (environment->scout.fuel == 0)
-            return false;
+    stats->stat[MOVED]++;
+    environment->scout.fuel--;
+    return true;
+}
 
-        if (action == MOVE_UP && get_block_above_scout(*environment) == AIR)
-        {
-            environment->scout.y++;
-        }
-        else if (action == MOVE_DOWN && get_block_below_scout(*environment) == AIR)
-        {
-            environment->scout.y--;
-        }
-        else if (action == MOVE && get_block_in_front_of_scout(*environment) == AIR)
-        {
-            environment->scout.x += x_offset_of(environment->scout.facing);
-            environment->scout.z += z_offset_of(environment->scout.facing);
-        }
-        else
-        {
-            return false; // Could not move
-        }
-
-        stats->stat[MOVED]++;
-        environment->scout.fuel--;
-        return true;
-    }
-
-    // DIG
-    if (is_dig_action(action))
-    {
-        int x = environment->scout.x;
-        int y = environment->scout.y;
-        int z = environment->scout.z;
-
-        if (action == DIG_UP)
-        {
-            y++;
-        }
-        else if (action == DIG_DOWN)
-        {
-            y--;
-        }
-        else
-        {
-            x += x_offset_of(environment->scout.facing);
-            z += z_offset_of(environment->scout.facing);
-        }
-
-        Item block = get_block(*environment, x, y, z);
-        if (block == AIR)
-            return false;
-
-        set_block(environment, x, y, z, AIR);
-        perform_dig_action(environment, stats, block);
-        return true;
-    }
+// FIXME: Log actions and fail/success
+void perform_network_actions(Environment *environment, Statistics *stats, const NetworkValues network_values)
+{
+    size_t n = NUM_OF_NODES - 1;
+#define NODE_ACTIVATED get_network_value(network_values, n--)
 
     // REFUEL
-    if (action == REFUEL)
-    {
-        InventorySlot *slot = &environment->scout.inventory[environment->scout.selected_inventory_slot];
-        if (slot->qty == 0)
-            return false;
-
-        Item fuel = slot->item;
-        size_t fuel_value = fuel_value_of(fuel);
-        if (fuel_value_of(slot->item) == 0)
-            return false;
-
-        decrement_increment_slot(slot);
-        environment->scout.fuel += fuel_value;
-        update_refuel_stat(stats, fuel);
-        return true;
-    }
+    if (NODE_ACTIVATED)
+        perform_refuel(environment, stats);
 
     // INVENTORY
-    if (action == SELECT_FIRST_SLOT)
-    {
+    if (NODE_ACTIVATED) // SELECT_FIRST_SLOT
         environment->scout.selected_inventory_slot = 0;
-        return true;
-    }
-
-    if (action == SELECT_NEXT_SLOT)
-    {
+    else if (NODE_ACTIVATED) // SELECT_NEXT_SLOT
         environment->scout.selected_inventory_slot = (environment->scout.selected_inventory_slot + 1) % 16;
-        return true;
-    }
 
-    UNREACHABLE;
+    // DIG
+    if (NODE_ACTIVATED)
+        perform_dig(environment, stats, false, false);
+
+    if (NODE_ACTIVATED)
+        perform_dig(environment, stats, true, false);
+
+    if (NODE_ACTIVATED)
+        perform_dig(environment, stats, false, true);
+
+    // MOVE / TURN
+    if (NODE_ACTIVATED) // MOVE_FORWARD
+        perform_move(environment, stats, false, false);
+
+    else if (NODE_ACTIVATED) // MOVE_UP
+        perform_move(environment, stats, true, false);
+
+    else if (NODE_ACTIVATED) // MOVE_DOWN
+        perform_move(environment, stats, false, true);
+
+    else if (NODE_ACTIVATED) // TURN_LEFT
+        environment->scout.facing = left_of(environment->scout.facing);
+
+    else if (NODE_ACTIVATED) // TURN_RIGHT
+        environment->scout.facing = right_of(environment->scout.facing);
+
+#undef NODE_ACTIVATED
 }
 
 // CALCULATE NOVELTY DISTANCE //
@@ -254,8 +250,7 @@ inline void iterate_simulation(const Network network)
 {
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
-    Action action = determine_network_action(simulation_network_values);
-    perform_action(&simulation_environment, action, &simulation_statistics);
+    perform_network_actions(&simulation_environment, &simulation_statistics, simulation_network_values);
     simulation_iteration++;
 }
 
@@ -267,8 +262,7 @@ inline void iterate_simulation_and_log(const Network network)
 
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
-    Action action = determine_network_action(simulation_network_values);
-    bool success = perform_action(&simulation_environment, action, &simulation_statistics);
+    perform_network_actions(&simulation_environment, &simulation_statistics, simulation_network_values);
 
     fprintf(simulation_action_log,
             "%d,%s,%s,%s,%s,%s,%d\n",
@@ -276,8 +270,6 @@ inline void iterate_simulation_and_log(const Network network)
             item_to_string(front),
             item_to_string(above),
             item_to_string(below),
-            action_as_string(action),
-            success ? "true" : "false",
             simulation_environment.scout.fuel);
 
     set_network_inputs(&simulation_network_values, simulation_environment);

@@ -317,7 +317,7 @@ f:write("\n")
 f:write(
     "void set_network_inputs_for_item(NetworkValues *values, const Environment environment, size_t *next_node, Item item);\n")
 
-f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block);\n")
+f:write("void update_dig_action(Environment* environment, Statistics* stats, Item block);\n")
 
 f:write("void update_refuel_stat(Statistics* stats, Item item);\n")
 
@@ -333,7 +333,7 @@ for _, item in ipairs(items) do
 end
 f:write("}\n\n")
 
-f:write("void perform_dig_action(Environment* environment, Statistics* stats, Item block)\n{\n")
+f:write("void update_dig_action(Environment* environment, Statistics* stats, Item block)\n{\n")
 f:write("    bool success;\n")
 f:write("    switch (block)\n    {\n")
 f:write("    case AIR:\n        return;\n\n")
@@ -379,8 +379,8 @@ f:write("    switch (item)\n    {\n")
 for _, item in ipairs(items) do
     if item.fuel_value then
         f:write("        case ", item.enum, ":\n")
-        f:write("             stats->stat[", item.enum, "_USED_AS_FUEL]++;\n")
-        f:write("             break;\n")
+        f:write("            stats->stat[", item.enum, "_USED_AS_FUEL]++;\n")
+        f:write("            break;\n")
     end
 end
 f:write("        default: UNREACHABLE;\n")

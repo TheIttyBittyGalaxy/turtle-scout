@@ -355,12 +355,13 @@ void iterate_training(Population *population)
         scout_stats[i] = simulation_statistics;
     }
 
-    // Generate novelty scores
+// Generate novelty scores
+#define N_NEAREST_NEIGHBOURS 32
     for (size_t i = 0; i < active_count; i++)
     {
-        // Find the 16 scouts with the most similar stats and track how similar they are
-        double nearest_scouts[16];
-        for (size_t j = 0; j < 16; j++)
+        // Find the scouts with the most similar stats and track how similar they are
+        double nearest_scouts[N_NEAREST_NEIGHBOURS];
+        for (size_t j = 0; j < N_NEAREST_NEIGHBOURS; j++)
             nearest_scouts[j] = DBL_MAX;
 
         for (size_t j = 0; j < population_count; j++)
@@ -370,12 +371,12 @@ void iterate_training(Population *population)
 
             double dist = novelty_distance(scout_stats[i], scout_stats[j]);
 
-            for (size_t s = 0; s < 16; s++)
+            for (size_t s = 0; s < N_NEAREST_NEIGHBOURS; s++)
             {
                 if (dist > nearest_scouts[s])
                     continue;
 
-                for (size_t n = 15; n > s; n--)
+                for (size_t n = N_NEAREST_NEIGHBOURS - 1; n > s; n--)
                     nearest_scouts[n] = nearest_scouts[n - 1];
 
                 nearest_scouts[s] = dist;
@@ -383,11 +384,11 @@ void iterate_training(Population *population)
             }
         }
 
-        // This scout's novelty score is the average of the 16 closest distances
+        // This scout's novelty score is the average of the closest distances
         double score = 0;
-        for (size_t j = 0; j < 16; j++)
+        for (size_t j = 0; j < N_NEAREST_NEIGHBOURS; j++)
             score += nearest_scouts[j];
-        score /= 16;
+        score /= N_NEAREST_NEIGHBOURS;
 
         scout_novelty_score[i] = score;
     }

@@ -162,47 +162,113 @@ bool perform_move(Environment *environment, Statistics *stats, bool up, bool dow
     return true;
 }
 
-// FIXME: Log actions and fail/success
-void perform_network_actions(Environment *environment, Statistics *stats, const NetworkValues network_values)
+ActionResults perform_network_actions(Environment *environment, Statistics *stats, const NetworkValues network_values)
 {
     size_t n = NUM_OF_NODES - 1;
 #define NODE_ACTIVATED get_network_value(network_values, n--)
 
+    ActionResults result;
+
     // REFUEL
     if (NODE_ACTIVATED)
-        perform_refuel(environment, stats);
+    {
+        result.refuel_action = true;
+        result.refuel_success = perform_refuel(environment, stats);
+    }
+    else
+    {
+        result.refuel_action = false;
+        result.refuel_success = true;
+    }
 
     // INVENTORY
-    if (NODE_ACTIVATED) // SELECT_FIRST_SLOT
+    if (NODE_ACTIVATED)
+    {
+        result.inventory_action = SELECT_FIRST_SLOT;
+        result.inventory_success = true;
+
         environment->scout.selected_inventory_slot = 0;
-    else if (NODE_ACTIVATED) // SELECT_NEXT_SLOT
-        environment->scout.selected_inventory_slot = (environment->scout.selected_inventory_slot + 1) % 16;
+    }
+    else if (NODE_ACTIVATED)
+    {
+        result.inventory_action = SELECT_NEXT_SLOT;
+        result.inventory_success = true;
+
+        size_t i = (environment->scout.selected_inventory_slot + 1) % 16;
+        environment->scout.selected_inventory_slot = i;
+    }
+    else
+    {
+        result.inventory_action = NO_INVENTORY_ACTION;
+        result.inventory_success = true;
+    }
 
     // DIG
     if (NODE_ACTIVATED)
-        perform_dig(environment, stats, false, false);
+    {
+        result.dig_action = true;
+        result.dig_success = perform_dig(environment, stats, false, false);
+    }
+    else
+    {
+        result.dig_action = false;
+        result.dig_success = true;
+    }
 
     if (NODE_ACTIVATED)
-        perform_dig(environment, stats, true, false);
+    {
+        result.dig_up_action = true;
+        result.dig_up_success = perform_dig(environment, stats, true, false);
+    }
+    else
+    {
+        result.dig_up_action = false;
+        result.dig_up_success = true;
+    }
 
     if (NODE_ACTIVATED)
-        perform_dig(environment, stats, false, true);
+    {
+        result.dig_down_action = true;
+        result.dig_down_success = perform_dig(environment, stats, false, true);
+    }
+    else
+    {
+        result.dig_down_action = false;
+        result.dig_down_success = true;
+    }
 
     // MOVE / TURN
-    if (NODE_ACTIVATED) // MOVE_FORWARD
-        perform_move(environment, stats, false, false);
+    if (NODE_ACTIVATED)
+    {
+        result.move_action = MOVE_FORWARD;
+        result.move_success = perform_move(environment, stats, false, false);
+    }
+    else if (NODE_ACTIVATED)
+    {
+        result.move_action = MOVE_UP;
+        result.move_success = perform_move(environment, stats, true, false);
+    }
+    else if (NODE_ACTIVATED)
+    {
+        result.move_action = MOVE_DOWN;
+        result.move_success = perform_move(environment, stats, false, true);
+    }
+    else if (NODE_ACTIVATED)
+    {
+        result.move_action = TURN_LEFT;
+        result.move_success = true;
 
-    else if (NODE_ACTIVATED) // MOVE_UP
-        perform_move(environment, stats, true, false);
-
-    else if (NODE_ACTIVATED) // MOVE_DOWN
-        perform_move(environment, stats, false, true);
-
-    else if (NODE_ACTIVATED) // TURN_LEFT
         environment->scout.facing = left_of(environment->scout.facing);
+    }
+    else if (NODE_ACTIVATED)
+    {
+        result.move_action = TURN_RIGHT;
+        result.move_success = true;
 
-    else if (NODE_ACTIVATED) // TURN_RIGHT
         environment->scout.facing = right_of(environment->scout.facing);
+    }
+
+    return result;
 
 #undef NODE_ACTIVATED
 }
@@ -262,14 +328,33 @@ inline void iterate_simulation_and_log(const Network network)
 
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
-    perform_network_actions(&simulation_environment, &simulation_statistics, simulation_network_values);
+    ActionResults result = perform_network_actions(&simulation_environment, &simulation_statistics, simulation_network_values);
 
     fprintf(simulation_action_log,
-            "%d,%s,%s,%s,%s,%s,%d\n",
+            "%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d\n",
             simulation_iteration,
             item_to_string(front),
             item_to_string(above),
             item_to_string(below),
+
+            result.refuel_action ? "REFUEL" : "",
+            result.refuel_action ? (result.refuel_success ? "true" : "false") : "",
+
+            (result.inventory_action == NO_INVENTORY_ACTION) ? "" : inventory_action_as_string(result.inventory_action),
+            (result.inventory_action == NO_INVENTORY_ACTION) ? "" : (result.inventory_success ? "true" : "false"),
+
+            result.dig_action ? "DIG" : "",
+            result.dig_action ? (result.dig_success ? "true" : "false") : "",
+
+            result.dig_up_action ? "DIG_UP" : "",
+            result.dig_up_action ? (result.dig_up_success ? "true" : "false") : "",
+
+            result.dig_down_action ? "DIG_DOWN" : "",
+            result.dig_down_action ? (result.dig_down_success ? "true" : "false") : "",
+
+            (result.move_action == NO_MOVE_ACTION) ? "" : move_action_as_string(result.move_action),
+            (result.move_action == NO_MOVE_ACTION) ? "" : (result.move_success ? "true" : "false"),
+
             simulation_environment.scout.fuel);
 
     set_network_inputs(&simulation_network_values, simulation_environment);
@@ -284,7 +369,7 @@ inline void iterate_simulation_and_log(const Network network)
 void open_simulation_logs()
 {
     simulation_action_log = fopen("export/sim_action_log.csv", "w");
-    fprintf(simulation_action_log, "#,Front,Above,Below,Action,Success,Fuel\n");
+    fprintf(simulation_action_log, "#,Front,Above,Below,Refuel,Success,Inventory,Success,Dig,Success,Dig up,Success,Dig down,Success,Move,Success,Fuel\n");
 
     simulation_network_log = fopen("export/sim_network_log.csv", "w");
     fprintf(simulation_network_log, "%d", get_network_value(simulation_network_values, 0) ? 1 : 0);

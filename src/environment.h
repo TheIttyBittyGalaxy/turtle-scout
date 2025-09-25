@@ -61,3 +61,4 @@ Item get_block_above_scout(const Environment environment);
 Item get_block_below_scout(const Environment environment);
 
 bool add_to_scout_inventory(Environment *environment, Item item);
+void decrement_increment_slot(InventorySlot *slot);

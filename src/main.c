@@ -189,8 +189,7 @@ bool perform_action(Environment *environment, const Action action, Statistics *s
         if (fuel_value_of(slot->item) == 0)
             return false;
 
-        // FIXME: Implement a "remove item from inventory" function that will change the item back to AIR if the item is depleted
-        slot->qty--;
+        decrement_increment_slot(slot);
         environment->scout.fuel += fuel_value;
         update_refuel_stat(stats, fuel);
         return true;

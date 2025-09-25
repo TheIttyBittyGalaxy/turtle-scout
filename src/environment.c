@@ -206,3 +206,14 @@ bool add_to_scout_inventory(Environment *environment, Item item)
 
     return false;
 }
+
+void decrement_increment_slot(InventorySlot *slot)
+{
+    if (slot->qty == 0)
+        return;
+
+    slot->qty--;
+
+    if (slot->qty == 0)
+        slot->item = AIR;
+}

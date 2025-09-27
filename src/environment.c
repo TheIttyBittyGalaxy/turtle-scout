@@ -1,5 +1,15 @@
 #include "environment.h"
 
+inline bool empty_segment_in_list(const Segment segment)
+{
+    return segment.grid_x == INT_MAX && segment.grid_y == INT_MAX && segment.grid_z == INT_MAX;
+}
+
+inline bool last_segment_in_list(const Segment segment)
+{
+    return segment.next == SIZE_MAX;
+}
+
 void init_environment(Environment *environment)
 {
     // Scout
@@ -19,16 +29,17 @@ void init_environment(Environment *environment)
 
     // Segments
     environment->count = 0;
-    environment->capacity = 0;
-    environment->segment = NULL;
-}
+    environment->capacity = SEGMENT_HASH_MAP_SIZE;
+    environment->overflow = SEGMENT_HASH_MAP_SIZE;
+    environment->segment = (Segment *)malloc(environment->capacity * sizeof(Segment));
 
-void free_environment(Environment *environment)
-{
-    environment->count = 0;
-    environment->capacity = 0;
-    if (environment->segment)
-        free(environment->segment);
+    for (size_t i = 0; i < environment->capacity; i++)
+    {
+        environment->segment[i].grid_x = INT_MAX; // Indicates that this segment is empty / unassigned
+        environment->segment[i].grid_y = INT_MAX;
+        environment->segment[i].grid_z = INT_MAX;
+        environment->segment[i].next = SIZE_MAX; // Indicates that this is the last segment in the linked list
+    }
 }
 
 void copy_environment(const Environment src, Environment *dst)
@@ -61,7 +72,8 @@ void copy_environment(const Environment src, Environment *dst)
     }
 
     dst->count = src.count;
-    for (size_t i = 0; i < src.count; i++)
+    dst->overflow = src.overflow;
+    for (size_t i = 0; i < src.capacity; i++)
         dst->segment[i] = src.segment[i];
 }
 
@@ -70,24 +82,38 @@ void dump_environment(const Environment environment)
     FILE *f;
     f = fopen("export/place_environment.mcfunction", "w");
 
-    // Blocks in each segment
-    for (size_t i = 0; i < environment.count; i++)
+    // Iterate over each linked list in the hash map
+    for (size_t n = 0; n < SEGMENT_HASH_MAP_SIZE; n++)
     {
-        Segment segment = environment.segment[i];
+        if (empty_segment_in_list(environment.segment[n]))
+            continue;
 
-        for (int sx = 0; sx < 16; sx++)
-            for (int sy = 0; sy < 16; sy++)
-                for (int sz = 0; sz < 16; sz++)
-                {
-                    Item block = segment.block[sx][sy][sz];
-                    if (block == AIR)
-                        continue;
+        size_t i = n;
+        while (true)
+        {
+            int base_x = environment.segment[i].grid_x * 16;
+            int base_y = environment.segment[i].grid_y * 16;
+            int base_z = environment.segment[i].grid_z * 16;
 
-                    int x = segment.grid_x * 16 + sx;
-                    int y = segment.grid_y * 16 + sy;
-                    int z = segment.grid_z * 16 + sz;
-                    fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
-                }
+            for (int sx = 0; sx < 16; sx++)
+                for (int sy = 0; sy < 16; sy++)
+                    for (int sz = 0; sz < 16; sz++)
+                    {
+                        Item block = environment.segment[i].block[sx][sy][sz];
+                        if (block == AIR)
+                            continue;
+
+                        int x = base_x + sx;
+                        int y = base_y + sy;
+                        int z = base_z + sz;
+                        fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
+                    }
+
+            if (last_segment_in_list(environment.segment[i]))
+                break;
+
+            i = environment.segment[i].next;
+        }
     }
 
     // Turtle (without program or inventory, just for reference)
@@ -98,16 +124,83 @@ void dump_environment(const Environment environment)
     fclose(f);
 }
 
-// FIXME: Make the array a hash map insted to make this lookup faster
+// Source: https://dmauro.com/post/77011214305/a-hashing-function-for-x-y-z-coordinates
+//         Thanks David! :)
+size_t hash_coordinate(int x, int y, int z)
+{
+    x = (x >= 0) ? (2 * x) : (-2 * x - 1);
+    y = (y >= 0) ? (2 * y) : (-2 * y - 1);
+    z = (z >= 0) ? (2 * z) : (-2 * z - 1);
+
+    size_t m = max3(x, y, z);
+    size_t h = (m * m * m) + (2 * m * z) + z;
+
+    if (m == z)
+        h += max2(x, y) * max2(x, y);
+    if (y >= x)
+        h += x + y;
+    else
+        h += y;
+
+    return h;
+}
+
+void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z)
+{
+    size_t i = hash_coordinate(grid_x, grid_y, grid_z) % SEGMENT_HASH_MAP_SIZE;
+
+    // Collision has occurred
+    if (!empty_segment_in_list(environment->segment[i]))
+    {
+        // Assert that the segment does not already exist in the linked list
+        assert(!(environment->segment[i].grid_x == grid_x && environment->segment[i].grid_y == grid_y && environment->segment[i].grid_z == grid_z));
+
+        // Traverse to end of linked list
+        while (!last_segment_in_list(environment->segment[i]))
+        {
+            i = environment->segment[i].next;
+
+            // Assert that the segment does not already exist in the linked list
+            assert(!(environment->segment[i].grid_x == grid_x && environment->segment[i].grid_y == grid_y && environment->segment[i].grid_z == grid_z));
+        }
+
+        // Reallocate memory if overflow has hit capacity
+        if (environment->overflow == environment->capacity)
+        {
+            environment->capacity += SEGMENT_HASH_MAP_SIZE;
+            environment->segment = (Segment *)realloc(environment->segment, sizeof(Segment) * environment->capacity);
+        }
+
+        // Add overflow segment and link previous segment to it
+        size_t next_index = environment->overflow++;
+        environment->segment[i].next = next_index;
+        i = next_index;
+    }
+
+    // Set segment
+    environment->count++;
+    environment->segment[i].grid_x = grid_x;
+    environment->segment[i].grid_y = grid_y;
+    environment->segment[i].grid_z = grid_z;
+    environment->segment[i].next = SIZE_MAX; // Indicate that this is the last segment in the linked list
+}
+
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z)
 {
-    for (size_t i = 0; i < environment.count; i++)
+    size_t i = hash_coordinate(grid_x, grid_y, grid_z) % SEGMENT_HASH_MAP_SIZE;
+    Segment *segment = environment.segment + i;
+
+    while (true)
     {
-        Segment *segment = environment.segment + i;
+        // We do not need to check for empty segments, as they will fail the following check
         if (segment->grid_x == grid_x && segment->grid_y == grid_y && segment->grid_z == grid_z)
             return segment;
+
+        if (last_segment_in_list(*segment))
+            return NULL;
+
+        segment = environment.segment + segment->next;
     }
-    return NULL;
 }
 
 void set_block(Environment *environment, int x, int y, int z, Item block)

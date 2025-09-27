@@ -34,23 +34,28 @@ typedef struct
     int grid_x;
     int grid_y;
     int grid_z;
+    size_t next;
+
     Item block[16][16][16];
 } Segment;
+
+#define SEGMENT_HASH_MAP_SIZE 128
 
 typedef struct
 {
     size_t count;
     size_t capacity;
+    size_t overflow;
     Segment *segment;
 
     EnvironmentScout scout;
 } Environment;
 
 void init_environment(Environment *environment);
-void free_environment(Environment *environment);
 void copy_environment(const Environment src, Environment *dst);
 void dump_environment(const Environment environment);
 
+void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z);
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z);
 
 void set_block(Environment *environment, int x, int y, int z, Item block);

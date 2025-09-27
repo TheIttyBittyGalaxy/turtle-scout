@@ -10,41 +10,37 @@
 
 Environment standard_environment;
 
-Segment generate_segment(int grid_x, int grid_y, int grid_z)
+void generate_segment(Environment *environment, int grid_x, int grid_y, int grid_z)
 {
-    Segment segment;
-    segment.grid_x = grid_x;
-    segment.grid_y = grid_y;
-    segment.grid_z = grid_z;
+    create_segment(environment, grid_x, grid_y, grid_z);
+    Segment *segment = get_segment(*environment, grid_x, grid_y, grid_z);
 
     if (grid_y > 0)
     {
         for (size_t sx = 0; sx < 16; sx++)
             for (size_t sy = 0; sy < 16; sy++)
                 for (size_t sz = 0; sz < 16; sz++)
-                    segment.block[sx][sy][sz] = AIR;
+                    segment->block[sx][sy][sz] = AIR;
     }
     else
     {
         for (size_t sx = 0; sx < 16; sx++)
             for (size_t sy = 0; sy < 16; sy++)
                 for (size_t sz = 0; sz < 16; sz++)
-                    segment.block[sx][sy][sz] = STONE;
+                    segment->block[sx][sy][sz] = STONE;
 
         if (grid_y == 0)
         {
             for (size_t sx = 0; sx < 16; sx++)
                 for (size_t sz = 0; sz < 16; sz++)
                 {
-                    segment.block[sx][15][sz] = GRASS_BLOCK;
-                    segment.block[sx][14][sz] = DIRT;
-                    segment.block[sx][13][sz] = DIRT;
-                    segment.block[sx][12][sz] = DIRT;
+                    segment->block[sx][15][sz] = GRASS_BLOCK;
+                    segment->block[sx][14][sz] = DIRT;
+                    segment->block[sx][13][sz] = DIRT;
+                    segment->block[sx][12][sz] = DIRT;
                 }
         }
     }
-
-    return segment;
 }
 
 // SCOUT POPULATION //
@@ -526,15 +522,11 @@ int main(int argc, char const *argv[])
     standard_environment.scout.z = 0;
     standard_environment.scout.facing = EAST;
 
-    standard_environment.capacity = 27;
-    standard_environment.count = 27;
-    standard_environment.segment = (Segment *)malloc(27 * sizeof(Segment));
-
     size_t i = 0;
     for (int gx = -1; gx <= 1; gx++)
         for (int gy = -1; gy <= 1; gy++)
             for (int gz = -1; gz <= 1; gz++)
-                standard_environment.segment[i++] = generate_segment(gx, gy, gz);
+                generate_segment(&standard_environment, gx, gy, gz);
 
     set_block(&standard_environment, 1, 15, 0, DIRT);
     for (int y = 16; y <= 22; y++)

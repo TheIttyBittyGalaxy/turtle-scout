@@ -1,18 +1,18 @@
 #include "environment.h"
 
-inline bool segment_at(const Segment segment, int grid_x, int grid_y, int grid_z)
+inline bool segment_at(const Segment *segment, int grid_x, int grid_y, int grid_z)
 {
-    return segment.grid_x == grid_x && segment.grid_y == grid_y && segment.grid_z == grid_z;
+    return segment->grid_x == grid_x && segment->grid_y == grid_y && segment->grid_z == grid_z;
 }
 
-inline bool empty_segment_in_list(const Segment segment)
+inline bool empty_segment_in_list(const Segment *segment)
 {
     return segment_at(segment, INT_MAX, INT_MAX, INT_MAX);
 }
 
-inline bool last_segment_in_list(const Segment segment)
+inline bool last_segment_in_list(const Segment *segment)
 {
-    return segment.next == SIZE_MAX;
+    return segment->next == SIZE_MAX;
 }
 
 void init_environment(Environment *environment)
@@ -90,7 +90,7 @@ void dump_environment(const Environment environment)
     // Iterate over each linked list in the hash map
     for (size_t n = 0; n < SEGMENT_HASH_MAP_SIZE; n++)
     {
-        if (empty_segment_in_list(environment.segment[n]))
+        if (empty_segment_in_list(environment.segment + n))
             continue;
 
         size_t i = n;
@@ -114,7 +114,7 @@ void dump_environment(const Environment environment)
                         fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
                     }
 
-            if (last_segment_in_list(environment.segment[i]))
+            if (last_segment_in_list(environment.segment + i))
                 break;
 
             i = environment.segment[i].next;
@@ -156,17 +156,17 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
     Segment *segment = environment->segment + i;
 
     // Check if segment is first in list
-    if (segment_at(*segment, grid_x, grid_y, grid_z))
+    if (segment_at(segment, grid_x, grid_y, grid_z))
         return {false, segment};
 
     // Traverse linked list
-    if (!empty_segment_in_list(*segment))
+    if (!empty_segment_in_list(segment))
     {
         // Return the segment if it is found
-        while (!last_segment_in_list(*segment))
+        while (!last_segment_in_list(segment))
         {
             segment = environment->segment + segment->next;
-            if (segment_at(*segment, grid_x, grid_y, grid_z))
+            if (segment_at(segment, grid_x, grid_y, grid_z))
                 return {false, segment};
         }
 
@@ -197,18 +197,17 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z)
 {
     size_t i = hash_coordinate(grid_x, grid_y, grid_z) % SEGMENT_HASH_MAP_SIZE;
-    Segment *segment = environment.segment + i;
 
     while (true)
     {
         // We do not need to check for empty segments, as they will fail the following check
-        if (segment_at(*segment, grid_x, grid_y, grid_z))
-            return segment;
+        if (segment_at(environment.segment + i, grid_x, grid_y, grid_z))
+            return environment.segment + i;
 
-        if (last_segment_in_list(*segment))
+        if (last_segment_in_list(environment.segment + i))
             return NULL;
 
-        segment = environment.segment + segment->next;
+        i = environment.segment[i].next;
     }
 }
 

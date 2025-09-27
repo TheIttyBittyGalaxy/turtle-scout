@@ -51,11 +51,17 @@ typedef struct
     EnvironmentScout scout;
 } Environment;
 
+typedef struct
+{
+    bool new_segment;
+    Segment *segment;
+} SegmentGet;
+
 void init_environment(Environment *environment);
 void copy_environment(const Environment src, Environment *dst);
 void dump_environment(const Environment environment);
 
-void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z);
+SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_y, int grid_z);
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z);
 
 void set_block(Environment *environment, int x, int y, int z, Item block);

@@ -10,11 +10,8 @@
 
 Environment standard_environment;
 
-void generate_segment(Environment *environment, int grid_x, int grid_y, int grid_z)
+void generate_segment(Segment *segment, int grid_x, int grid_y, int grid_z)
 {
-    create_segment(environment, grid_x, grid_y, grid_z);
-    Segment *segment = get_segment(*environment, grid_x, grid_y, grid_z);
-
     if (grid_y > 0)
     {
         for (size_t sx = 0; sx < 16; sx++)
@@ -526,7 +523,11 @@ int main(int argc, char const *argv[])
     for (int gx = -1; gx <= 1; gx++)
         for (int gy = -1; gy <= 1; gy++)
             for (int gz = -1; gz <= 1; gz++)
-                generate_segment(&standard_environment, gx, gy, gz);
+            {
+                SegmentGet result = get_or_create_segment(&standard_environment, gx, gy, gz);
+                if (result.new_segment)
+                    generate_segment(result.segment, gx, gy, gz);
+            }
 
     set_block(&standard_environment, 1, 15, 0, DIRT);
     for (int y = 16; y <= 22; y++)

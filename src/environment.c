@@ -1,8 +1,13 @@
 #include "environment.h"
 
+inline bool segment_at(const Segment segment, int grid_x, int grid_y, int grid_z)
+{
+    return segment.grid_x == grid_x && segment.grid_y == grid_y && segment.grid_z == grid_z;
+}
+
 inline bool empty_segment_in_list(const Segment segment)
 {
-    return segment.grid_x == INT_MAX && segment.grid_y == INT_MAX && segment.grid_z == INT_MAX;
+    return segment_at(segment, INT_MAX, INT_MAX, INT_MAX);
 }
 
 inline bool last_segment_in_list(const Segment segment)
@@ -145,24 +150,27 @@ size_t hash_coordinate(int x, int y, int z)
     return h;
 }
 
-void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z)
+SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_y, int grid_z)
 {
     size_t i = hash_coordinate(grid_x, grid_y, grid_z) % SEGMENT_HASH_MAP_SIZE;
+    Segment *segment = environment->segment + i;
 
-    // Collision has occurred
-    if (!empty_segment_in_list(environment->segment[i]))
+    // Check if segment is first in list
+    if (segment_at(*segment, grid_x, grid_y, grid_z))
+        return {false, segment};
+
+    // Traverse linked list
+    if (!empty_segment_in_list(*segment))
     {
-        // Assert that the segment does not already exist in the linked list
-        assert(!(environment->segment[i].grid_x == grid_x && environment->segment[i].grid_y == grid_y && environment->segment[i].grid_z == grid_z));
-
-        // Traverse to end of linked list
-        while (!last_segment_in_list(environment->segment[i]))
+        // Return the segment if it is found
+        while (!last_segment_in_list(*segment))
         {
-            i = environment->segment[i].next;
-
-            // Assert that the segment does not already exist in the linked list
-            assert(!(environment->segment[i].grid_x == grid_x && environment->segment[i].grid_y == grid_y && environment->segment[i].grid_z == grid_z));
+            segment = environment->segment + segment->next;
+            if (segment_at(*segment, grid_x, grid_y, grid_z))
+                return {false, segment};
         }
+
+        // Segment not found, create overflow segment
 
         // Reallocate memory if overflow has hit capacity
         if (environment->overflow == environment->capacity)
@@ -172,17 +180,18 @@ void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z
         }
 
         // Add overflow segment and link previous segment to it
-        size_t next_index = environment->overflow++;
-        environment->segment[i].next = next_index;
-        i = next_index;
+        segment->next = environment->overflow++;
+        segment = environment->segment + segment->next;
     }
 
-    // Set segment
+    // Set segment values
     environment->count++;
-    environment->segment[i].grid_x = grid_x;
-    environment->segment[i].grid_y = grid_y;
-    environment->segment[i].grid_z = grid_z;
-    environment->segment[i].next = SIZE_MAX; // Indicate that this is the last segment in the linked list
+    segment->grid_x = grid_x;
+    segment->grid_y = grid_y;
+    segment->grid_z = grid_z;
+    segment->next = SIZE_MAX; // Indicate that this is the last segment in the linked list
+
+    return {true, segment};
 }
 
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z)
@@ -193,7 +202,7 @@ Segment *get_segment(const Environment environment, int grid_x, int grid_y, int 
     while (true)
     {
         // We do not need to check for empty segments, as they will fail the following check
-        if (segment->grid_x == grid_x && segment->grid_y == grid_y && segment->grid_z == grid_z)
+        if (segment_at(*segment, grid_x, grid_y, grid_z))
             return segment;
 
         if (last_segment_in_list(*segment))

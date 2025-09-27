@@ -61,22 +61,22 @@ typedef struct
 
 inline void set_network_inputs(NetworkValues *values, const Environment environment)
 {
-    size_t next_node = 0;
-    set_network_value(values, next_node++, true);
+    size_t next_input = 0;
+    set_network_value(values, next_input++, true);
 
     Item block_front = get_block_in_front_of_scout(environment);
-    set_network_inputs_for_item(values, environment, &next_node, block_front);
+    set_network_inputs_for_item(values, environment, &next_input, block_front);
 
     Item block_above = get_block_above_scout(environment);
-    set_network_inputs_for_item(values, environment, &next_node, block_above);
+    set_network_inputs_for_item(values, environment, &next_input, block_above);
 
     Item block_below = get_block_below_scout(environment);
-    set_network_inputs_for_item(values, environment, &next_node, block_below);
+    set_network_inputs_for_item(values, environment, &next_input, block_below);
 
     // TODO: What is the best way to enter the qty into the network?
     InventorySlot slot = environment.scout.inventory[environment.scout.selected_inventory_slot];
-    Item selected = (slot.qty > 0) ? slot.item : AIR;
-    set_network_inputs_for_item(values, environment, &next_node, selected);
+    Item selected = (slot.qty > 0) ? slot.item : AIR; // FIXME: I don't think this line is needed, as I think all the methods that handle inventory slots maintain it to be true that the item will be AIR if the qty is 0?
+    set_network_inputs_for_item(values, environment, &next_input, selected);
 }
 
 bool perform_refuel(Environment *environment, Statistics *stats)

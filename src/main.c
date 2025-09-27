@@ -40,6 +40,29 @@ void generate_segment(Segment *segment, int grid_x, int grid_y, int grid_z)
     }
 }
 
+void update_world_generation(Environment *environment)
+{
+    int sx = mod(environment->scout.x, 16);
+    int sy = mod(environment->scout.y, 16);
+    int sz = mod(environment->scout.z, 16);
+
+    int gx = (environment->scout.x - sx) / 16;
+    int gy = (environment->scout.y - sy) / 16;
+    int gz = (environment->scout.z - sz) / 16;
+
+    for (int ox = -1; ox <= 1; ox++)
+        for (int oy = -1; oy <= 1; oy++)
+            for (int oz = -1; oz <= 1; oz++)
+            {
+                int x = gx + ox;
+                int y = gy + oy;
+                int z = gz + oz;
+                SegmentGet result = get_or_create_segment(&standard_environment, x, y, z);
+                if (result.new_segment)
+                    generate_segment(result.segment, x, y, z);
+            }
+}
+
 // SCOUT POPULATION //
 
 typedef struct
@@ -261,6 +284,9 @@ void initialise_simulation(const Network network, const Environment environment)
 
 inline void iterate_simulation(const Network network)
 {
+    // TODO: Don't update the world gen every iteration. e.g. only update when the scout enters a segment boundary?
+    update_world_generation(&simulation_environment);
+
     set_network_inputs(&simulation_network_values, simulation_environment);
     evaluate_network_values(network, &simulation_network_values);
     perform_network_actions(&simulation_environment, &simulation_statistics, simulation_network_values);
@@ -269,6 +295,9 @@ inline void iterate_simulation(const Network network)
 
 inline void iterate_simulation_and_log(const Network network)
 {
+    // TODO: Don't update the world gen every iteration. e.g. only update when the scout enters a segment boundary?
+    update_world_generation(&simulation_environment);
+
     Item front = get_block_in_front_of_scout(simulation_environment);
     Item above = get_block_above_scout(simulation_environment);
     Item below = get_block_below_scout(simulation_environment);
@@ -519,7 +548,6 @@ int main(int argc, char const *argv[])
     standard_environment.scout.z = 0;
     standard_environment.scout.facing = EAST;
 
-    size_t i = 0;
     for (int gx = -1; gx <= 1; gx++)
         for (int gy = -1; gy <= 1; gy++)
             for (int gz = -1; gz <= 1; gz++)
@@ -650,6 +678,7 @@ int main(int argc, char const *argv[])
                     for (size_t n = 0; n < 128; n++)
                         iterate_simulation_and_log(population.scout_network[scout_index]);
                     close_simulation_logs();
+                    dump_environment(simulation_environment);
                 }
                 else
                 {

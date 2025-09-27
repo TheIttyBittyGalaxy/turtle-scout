@@ -155,6 +155,22 @@ local function open(path)
     return file
 end
 
+local function copy_file(src_path, dst_path)
+    local src = io.open(src_path, "rb")
+    if not src then
+        error("Could not open " .. src_path .. " to copy from.")
+    end
+    local content = src:read("*all")
+    src:close()
+
+    local dst = io.open(dst_path, "wb")
+    if not dst then
+        error("Could not open " .. dst_path .. " to copy to.")
+    end
+    dst:write(content)
+    dst:close()
+end
+
 -- GENERATE item.h --
 
 local f = open("item.h")
@@ -408,6 +424,8 @@ for line in t:lines("L") do
         for i, item in ipairs(items) do
             f:write("    set_input(item == \"minecraft:", item.name, "\")\n")
         end
+    elseif line:sub(1, 14) == "---@diagnostic" then
+        -- pass
     else
         f:write(line)
     end
@@ -415,3 +433,5 @@ end
 
 t:close()
 f:close()
+
+copy_file("scout/scout.lua", "export/scout.lua")

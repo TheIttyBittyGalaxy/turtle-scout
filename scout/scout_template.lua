@@ -1,25 +1,32 @@
--- ACTIONS
+---@diagnostic disable: empty-block
 
--- TODO: Add refuel action
+-- ACTIONS --
+
 local Actions = {
-    "IDLE",
-
-    "TURN_LEFT",
-    "TURN_RIGHT",
-
-    "MOVE",
-    "MOVE_UP",
-    "MOVE_DOWN",
-
-    "DIG",
-    "DIG_UP",
-    "DIG_DOWN",
+    "REFUEL",
 
     "SELECT_FIRST_SLOT",
     "SELECT_NEXT_SLOT",
+
+    "DIG_FORWARD",
+    "DIG_UP",
+    "DIG_DOWN",
+
+    "MOVE_FORWARD",
+    "MOVE_UP",
+    "MOVE_DOWN",
+
+    "TURN_LEFT",
+    "TURN_RIGHT",
 }
 
--- NETWORK
+local ActionIndex = {}
+for i, action in ipairs(Actions) do
+    ActionIndex[action] = i
+end
+
+-- NETWORK --
+
 local node = {}
 local result = {}
 
@@ -68,16 +75,20 @@ for i = 1, node_count do
     result[i] = false
 end
 
--- MAIN LOOP
-local log = io.open("cc_action_log.csv", "w")
-if not log then
+-- ACTION LOG --
+
+local action_log = io.open("cc_action_log.csv", "w")
+if not action_log then
     error("Could not open cc_action_log.csv for writing.")
 end
 
-local net_log = io.open("cc_network_log.csv", "w")
-if not net_log then
-    error("Could not open cc_network_log.csv for writing.")
+action_log:write("#,Front,Above,Below")
+for _, action in ipairs(Actions) do
+    action_log:write(action)
 end
+action_log:write(",Fuel\n")
+
+-- NETWORK LOG --
 
 local function node_as_num(i)
     if node[i] then
@@ -87,45 +98,68 @@ local function node_as_num(i)
     end
 end
 
-net_log:write(node_as_num(1))
-for i = 2, node_count do
-    net_log:write(",", node_as_num(i))
+local network_log = io.open("cc_network_log.csv", "w")
+if not network_log then
+    error("Could not open cc_network_log.csv for writing.")
 end
-net_log:write("\n")
 
-local next_node
+network_log:write(node_as_num(1))
+for i = 2, node_count do
+    network_log:write(",", node_as_num(i))
+end
+network_log:write("\n")
+
+-- SET NETWORK INPUTS --
+
+local next_input
 
 local function set_bias()
     node[1] = true
-    next_node = 2
+    next_input = 2
 end
 
+---@diagnostic disable-next-line: unused-local, unused-function
 local function set_input(value)
-    node[next_node] = value
-    next_node = next_node + 1
+    node[next_input] = value
+    next_input = next_input + 1
 end
 
+---@diagnostic disable-next-line: unused-local
 local function set_inputs_for_item(item)
     -- [[INSERT GENERATED CODE]]
 end
 
--- while true do
-for iteration = 1, 128 do
+-- PERFORM NETWORK OUTPUTS --
 
-    -- Set inputs
+local outcome = {}
+
+local function do_action(action, funct)
+    local i = ActionIndex[action]
+    if node[node_count - i + 1] then
+        local success = funct()
+        outcome[i] = success and "PASS" or "FAIL"
+        return true
+    end
+    return false
+end
+
+-- MAIN LOOP --
+
+for iteration = 1, 128 do
+    -- Data collection
     local is_front, front = turtle.inspect()
     local is_above, above = turtle.inspectUp()
     local is_below, below = turtle.inspectDown()
     local selected = turtle.getItemDetail()
 
+    -- Set network inputs
     set_bias()
     set_inputs_for_item(is_front and front.name or "minecraft:air")
     set_inputs_for_item(is_above and above.name or "minecraft:air")
     set_inputs_for_item(is_below and below.name or "minecraft:air")
-    set_inputs_for_item(is_below and below.name or "minecraft:air")
     set_inputs_for_item(selected and selected.name or "minecraft:air")
 
-    -- Calculate results
+    -- Evaluate network
     for i = 1, node_count do
         local value = false
         for j = 1, node_count do
@@ -156,64 +190,68 @@ for iteration = 1, 128 do
     end
 
     -- Perform action
-    local success = true
-    if action == "IDLE" then
-        -- Pass
-
-    elseif action == "TURN_LEFT" then
-        turtle.turnLeft()
-    elseif action == "TURN_RIGHT" then
-        turtle.turnRight()
-
-    elseif action == "MOVE" then
-        success = turtle.forward()
-    elseif action == "MOVE_UP" then
-        success = turtle.up()
-    elseif action == "MOVE_DOWN" then
-        success = turtle.down()
-
-    elseif action == "DIG" then
-        success = turtle.dig()
-    elseif action == "DIG_UP" then
-        success = turtle.digUp()
-    elseif action == "DIG_DOWN" then
-        success = turtle.digDown()
-
-    elseif action == "SELECT_FIRST_SLOT" then
-        success = turtle.select(1)
-    elseif action == "SELECT_NEXT_SLOT" then
-        local slot = turtle.getSelectedSlot() + 1
-        if slot > 16 then
-            slot = 1
-        end
-        success = turtle.select(slot)
+    for i = 1, #Actions do
+        outcome[i] = ""
     end
 
+    do_action("REFUEL", function()
+        turtle.refuel(1)
+        return true
+    end)
+
+    if do_action("SELECT_FIRST_SLOT", function()
+            turtle.select(1)
+            return true
+        end) then
+    else
+        do_action("SELECT_NEXT_SLOT", function()
+            local slot = turtle.getSelectedSlot() + 1
+            if slot > 16 then
+                slot = 1
+            end
+            turtle.select(slot)
+            return true
+        end)
+    end
+
+    do_action("DIG_FORWARD", turtle.dig)
+    do_action("DIG_UP", turtle.digUp)
+    do_action("DIG_DOWN", turtle.digDown)
+
+    if do_action("MOVE_FORWARD", turtle.forward) then
+    elseif do_action("MOVE_UP", turtle.up) then
+    elseif do_action("MOVE_DOWN", turtle.down) then
+    elseif do_action("TURN_LEFT", turtle.turnLeft) then
+    elseif do_action("TURN_RIGHT", turtle.turnRight) then
+    end
+
+    -- Update action log
+    action_log:write(
+        iteration - 1, ",",
+        is_front and front.name:sub(11):upper() or "AIR", ",",
+        is_above and above.name:sub(11):upper() or "AIR", ",",
+        is_below and below.name:sub(11):upper() or "AIR", ","
+    )
+
+    for i = 1, #Actions do
+        action_log:write(outcome[i])
+    end
+
+    action_log:write(turtle.getFuelLevel(), "\n")
+
+    -- Update network log
     set_bias()
     set_inputs_for_item(is_front and front.name or "minecraft:air")
     set_inputs_for_item(is_above and above.name or "minecraft:air")
     set_inputs_for_item(is_below and below.name or "minecraft:air")
-    set_inputs_for_item(is_below and below.name or "minecraft:air")
     set_inputs_for_item(selected and selected.name or "minecraft:air")
 
-    -- Log
-    log:write(
-        iteration - 1, ",",
-        is_front and front.name:sub(11):upper() or "AIR", ",",
-        is_above and above.name:sub(11):upper() or "AIR", ",",
-        is_below and below.name:sub(11):upper() or "AIR", ",",
-        action, ",",
-        tostring(success),
-        turtle.getFuelLevel(),
-        "\n")
-
-    net_log:write(node_as_num(1))
+    network_log:write(node_as_num(1))
     for i = 2, node_count do
-        net_log:write(",", node_as_num(i))
+        network_log:write(",", node_as_num(i))
     end
-    net_log:write("\n")
-
+    network_log:write("\n")
 end
 
-log:close()
-net_log:close()
+action_log:close()
+network_log:close()

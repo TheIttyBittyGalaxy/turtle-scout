@@ -10,7 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define UNREACHABLE __builtin_unreachable();
+#ifdef __GNUC__
+#define UNREACHABLE __builtin_unreachable()
+#else
+#define UNREACHABLE
+#endif
 
 #define ALLOCATE(memory, amt, Type) memory = (Type *)malloc(sizeof(Type) * amt)
 #define REALLOCATE(memory, amt, Type) memory = (Type *)realloc(memory, sizeof(Type) * amt)

@@ -175,8 +175,10 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
         // Reallocate memory if overflow has hit capacity
         if (environment->overflow == environment->capacity)
         {
+            size_t i = segment - environment->segment;
             environment->capacity += SEGMENT_HASH_MAP_SIZE;
             REALLOCATE(environment->segment, environment->capacity, Segment);
+            segment = environment->segment + i; // Restore pointer after reallocation
         }
 
         // Add overflow segment and link previous segment to it

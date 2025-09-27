@@ -446,11 +446,11 @@ void iterate_training(Population *population)
         if (population->capacity == population->count)
         {
             population->capacity += 128;
-            population->scout_id = (size_t *)realloc(population->scout_id, sizeof(size_t) * population->capacity);
-            population->scout_generation = (size_t *)realloc(population->scout_generation, sizeof(size_t) * population->capacity);
-            population->scout_network = (Network *)realloc(population->scout_network, sizeof(Network) * population->capacity);
-            population->scout_stats = (Statistics *)realloc(population->scout_stats, sizeof(Statistics) * population->capacity);
-            population->scout_novelty_score = (double *)realloc(population->scout_novelty_score, sizeof(double) * population->capacity);
+            REALLOCATE(population->scout_id, population->capacity, size_t);
+            REALLOCATE(population->scout_generation, population->capacity, size_t);
+            REALLOCATE(population->scout_network, population->capacity, Network);
+            REALLOCATE(population->scout_novelty_score, population->capacity, double);
+            REALLOCATE(population->scout_stats, population->capacity, Statistics);
         }
 
         // Add the novel scout to the historic population
@@ -551,11 +551,11 @@ int main(int argc, char const *argv[])
     population.active_count = population.count;
     population.next_id = 1; // 0 indicates NULL
 
-    population.scout_id = (size_t *)malloc(sizeof(size_t) * population.capacity);
-    population.scout_generation = (size_t *)malloc(sizeof(size_t) * population.capacity);
-    population.scout_network = (Network *)malloc(sizeof(Network) * population.capacity);
-    population.scout_stats = (Statistics *)malloc(sizeof(Statistics) * population.capacity);
-    population.scout_novelty_score = (double *)malloc(sizeof(double) * population.capacity);
+    ALLOCATE(population.scout_id, population.capacity, size_t);
+    ALLOCATE(population.scout_generation, population.capacity, size_t);
+    ALLOCATE(population.scout_network, population.capacity, Network);
+    ALLOCATE(population.scout_stats, population.capacity, Statistics);
+    ALLOCATE(population.scout_novelty_score, population.capacity, double);
 
     // Generate random initial population
     printf("Creating initial population.\n");

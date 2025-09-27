@@ -12,6 +12,9 @@
 
 #define UNREACHABLE __builtin_unreachable();
 
+#define ALLOCATE(memory, amt, Type) memory = (Type *)malloc(sizeof(Type) * amt)
+#define REALLOCATE(memory, amt, Type) memory = (Type *)realloc(memory, sizeof(Type) * amt)
+
 int mod(int a, int b);
 
 int max2(int a, int b);

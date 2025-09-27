@@ -31,7 +31,7 @@ void init_environment(Environment *environment)
     environment->count = 0;
     environment->capacity = SEGMENT_HASH_MAP_SIZE;
     environment->overflow = SEGMENT_HASH_MAP_SIZE;
-    environment->segment = (Segment *)malloc(environment->capacity * sizeof(Segment));
+    ALLOCATE(environment->segment, environment->capacity, Segment);
 
     for (size_t i = 0; i < environment->capacity; i++)
     {
@@ -63,12 +63,12 @@ void copy_environment(const Environment src, Environment *dst)
     if (dst->capacity == 0)
     {
         dst->capacity = src.capacity;
-        dst->segment = (Segment *)malloc(dst->capacity * sizeof(Segment));
+        ALLOCATE(dst->segment, dst->capacity, Segment);
     }
     else if (dst->capacity < src.capacity)
     {
         dst->capacity = src.capacity;
-        dst->segment = (Segment *)realloc(dst->segment, dst->capacity * sizeof(Segment));
+        REALLOCATE(dst->segment, dst->capacity, Segment);
     }
 
     dst->count = src.count;
@@ -168,7 +168,7 @@ void create_segment(Environment *environment, int grid_x, int grid_y, int grid_z
         if (environment->overflow == environment->capacity)
         {
             environment->capacity += SEGMENT_HASH_MAP_SIZE;
-            environment->segment = (Segment *)realloc(environment->segment, sizeof(Segment) * environment->capacity);
+            REALLOCATE(environment->segment, environment->capacity, Segment);
         }
 
         // Add overflow segment and link previous segment to it

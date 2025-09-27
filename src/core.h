@@ -18,6 +18,7 @@
 
 #define ALLOCATE(memory, amt, Type) memory = (Type *)malloc(sizeof(Type) * amt)
 #define REALLOCATE(memory, amt, Type) memory = (Type *)realloc(memory, sizeof(Type) * amt)
+#define COPY(src, dst, amt) memcpy(dst, src, amt * sizeof(src[0]))
 
 int mod(int a, int b);
 

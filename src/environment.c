@@ -78,8 +78,7 @@ void copy_environment(const Environment src, Environment *dst)
 
     dst->count = src.count;
     dst->overflow = src.overflow;
-    for (size_t i = 0; i < src.capacity; i++)
-        dst->segment[i] = src.segment[i];
+    COPY(src.segment, dst->segment, src.capacity);
 }
 
 void dump_environment(const Environment environment)

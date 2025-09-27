@@ -157,7 +157,7 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
 
     // Check if segment is first in list
     if (segment_at(segment, grid_x, grid_y, grid_z))
-        return {false, segment};
+        return (SegmentGet){false, segment};
 
     // Traverse linked list
     if (!empty_segment_in_list(segment))
@@ -167,7 +167,7 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
         {
             segment = environment->segment + segment->next;
             if (segment_at(segment, grid_x, grid_y, grid_z))
-                return {false, segment};
+                return (SegmentGet){false, segment};
         }
 
         // Segment not found, create overflow segment
@@ -191,7 +191,7 @@ SegmentGet get_or_create_segment(Environment *environment, int grid_x, int grid_
     segment->grid_z = grid_z;
     segment->next = SIZE_MAX; // Indicate that this is the last segment in the linked list
 
-    return {true, segment};
+    return (SegmentGet){true, segment};
 }
 
 Segment *get_segment(const Environment environment, int grid_x, int grid_y, int grid_z)

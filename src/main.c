@@ -205,7 +205,7 @@ ActionOutcomes perform_network_actions(Environment *environment, Statistics *sta
     do_action(REFUEL, perform_refuel(environment, stats));
 
     // INVENTORY
-    do_action(SELECT_FIRST_SLOT, perform_select_first_slot(environment, stats)) //
+    do_action(SELECT_FIRST_SLOT, perform_select_first_slot(environment, stats)) // comments to stop auto-formatter putting this all on one line
         else do_action(SELECT_NEXT_SLOT, perform_select_next_slot(environment, stats));
 
     // DIG
@@ -220,9 +220,9 @@ ActionOutcomes perform_network_actions(Environment *environment, Statistics *sta
         else do_action(MOVE_UP, perform_move(environment, stats, true, false))   //
         else do_action(MOVE_DOWN, perform_move(environment, stats, false, true)) //
         else do_action(TURN_LEFT, perform_turn_left(environment, stats))         //
-        else do_action(TURN_RIGHT, perform_turn_right(environment, stats))
+        else do_action(TURN_RIGHT, perform_turn_right(environment, stats));
 
-            return outcome;
+    return outcome;
 
 #undef NODE_ACTIVATED
 }

@@ -19,3 +19,18 @@ int mod(int a, int b);
 
 int max2(int a, int b);
 int max3(int a, int b, int c);
+
+// Source: https://stackoverflow.com/questions/26237419/faster-than-rand
+//         Thanks Asis :)
+static unsigned int g_seed;
+
+inline void fast_srand(int seed)
+{
+    g_seed = seed;
+}
+
+inline int fast_rand(void)
+{
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & 0x7FFF;
+}

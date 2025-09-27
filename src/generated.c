@@ -56,22 +56,22 @@ void update_dig_action(Environment* environment, Statistics* stats, Item block)
 
     case OAK_LEAVES:
         stats->stat[OAK_LEAVES_BROKEN]++;
-        if (rand() % 100 < 1)
+        if (fast_rand() % 100 < 1)
         {
             success = add_to_scout_inventory(environment, STICK);
             if (success) stats->stat[STICK_OBTAINED_BY_MINING]++;
         }
-        if (rand() % 100 < 1)
+        if (fast_rand() % 100 < 1)
         {
             success = add_to_scout_inventory(environment, STICK);
             if (success) stats->stat[STICK_OBTAINED_BY_MINING]++;
         }
-        if (rand() % 100 < 5)
+        if (fast_rand() % 100 < 5)
         {
             success = add_to_scout_inventory(environment, OAK_SAPLING);
             if (success) stats->stat[OAK_SAPLING_OBTAINED_BY_MINING]++;
         }
-        if (rand() % 100 < 20)
+        if (fast_rand() % 100 < 20)
         {
             success = add_to_scout_inventory(environment, APPLE);
             if (success) stats->stat[APPLE_OBTAINED_BY_MINING]++;

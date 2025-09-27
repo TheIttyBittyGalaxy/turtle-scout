@@ -361,7 +361,7 @@ for _, item in ipairs(items) do
                 local drop = item_by_name[drop_data.name]
                 -- FIXME: This way of calculating the chance of an item being dropped is a bit squiffy.
                 --        It works as of writing, but might need fixing later?
-                f:write("        if (rand() % 100 < ", math.ceil(drop_data.chance * 100), ")\n")
+                f:write("        if (fast_rand() % 100 < ", math.ceil(drop_data.chance * 100), ")\n")
                 f:write("        {\n")
                 f:write("            success = add_to_scout_inventory(environment, ", drop.enum, ");\n")
                 f:write("            if (success) stats->stat[", drop.enum, "_OBTAINED_BY_MINING]++;\n")

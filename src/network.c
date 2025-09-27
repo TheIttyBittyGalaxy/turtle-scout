@@ -17,9 +17,9 @@ void randomise_network(Network *network)
 
             for (size_t n = 0; n < NODES_IN_CLUSTER; n++)
             {
-                if ((rand() % 16) == 0)
+                if ((fast_rand() % 16) == 0)
                     cluster_activations |= BITMASK_FOR(n);
-                else if ((rand() % 8) == 0)
+                else if ((fast_rand() % 8) == 0)
                     cluster_inhibitions |= BITMASK_FOR(n);
             }
 
@@ -37,7 +37,7 @@ void mutate_network(Network *network)
         {
             for (size_t n = 0; n < NODES_IN_CLUSTER; n++)
             {
-                if (rand() % 25 > 0)
+                if (fast_rand() % 25 > 0)
                     continue;
 
                 bool activate = network->activations[i][j] & BITMASK_FOR(n);
@@ -47,7 +47,7 @@ void mutate_network(Network *network)
                 {
                     UNSET_BIT(network->activations[i][j], n);
 
-                    if (rand() % 3 == 0)
+                    if (fast_rand() % 3 == 0)
                         SET_BIT(network->inhibitions[i][j], n);
                     else
                         UNSET_BIT(network->inhibitions[i][j], n);
@@ -56,12 +56,12 @@ void mutate_network(Network *network)
                 {
                     UNSET_BIT(network->inhibitions[i][j], n);
 
-                    if (rand() % 3 == 0)
+                    if (fast_rand() % 3 == 0)
                         SET_BIT(network->activations[i][j], n);
                     else
                         UNSET_BIT(network->activations[i][j], n);
                 }
-                else if (rand() % 2 == 0)
+                else if (fast_rand() % 2 == 0)
                 {
                     SET_BIT(network->activations[i][j], n);
                     UNSET_BIT(network->inhibitions[i][j], n);

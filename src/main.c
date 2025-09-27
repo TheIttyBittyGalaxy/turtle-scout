@@ -351,7 +351,7 @@ void iterate_training(Population *population)
         if (population->scout_id[child] != 0)
             continue;
 
-        size_t parent = rand() % child;
+        size_t parent = fast_rand() % child;
 
         population->scout_id[child] = population->next_id++;
         population->scout_generation[child] = population->scout_generation[parent] + 1;
@@ -475,7 +475,7 @@ void iterate_training(Population *population)
                           ? 1.0 / (1.0 + exp(8 - 16 * p))
                           : 0; // Most novel scout needs immunity or else the repopulation method does not work
 
-        double r = rand() / (double)(RAND_MAX - 1);
+        double r = fast_rand() / (double)(RAND_MAX - 1);
         if (r < risk)
             population->scout_id[i] = 0;
         else
@@ -507,7 +507,7 @@ int main(int argc, char const *argv[])
 {
     // TODO: Allow user to specify the seed
     printf("Seed 42.\n");
-    srand(42);
+    fast_srand(42);
 
     // Generate standard environment
     // TODO: Create a unique environment for each training iteration

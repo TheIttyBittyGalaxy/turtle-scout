@@ -83,7 +83,8 @@ void copy_environment(const Environment src, Environment *dst)
 
 void dump_environment(const Environment environment)
 {
-    char path_buffer[128];
+    FILE *f;
+    char path_buffer[512];
 
     // Iterate over each linked list in the hash map
     size_t count = 0;
@@ -95,15 +96,14 @@ void dump_environment(const Environment environment)
         size_t i = n;
         while (true)
         {
-            FILE *f;
-            sprintf(path_buffer, "export/environment/place_segment_%03d.mcfunction", count++);
-            f = fopen(path_buffer, "w");
-
             int base_x = environment.segment[i].grid_x * 16;
             int base_y = environment.segment[i].grid_y * 16;
             int base_z = environment.segment[i].grid_z * 16;
 
-            fprintf(f, "say Segment %03d\n", count - 1);
+            // Place segment function
+            sprintf(path_buffer, "export/environment/place_segment_%03d.mcfunction", count);
+            f = fopen(path_buffer, "w");
+
             for (int sx = 0; sx < 16; sx++)
                 for (int sy = 0; sy < 16; sy++)
                     for (int sz = 0; sz < 16; sz++)
@@ -115,9 +115,19 @@ void dump_environment(const Environment environment)
                         int x = base_x + sx;
                         int y = base_y + sy;
                         int z = base_z + sz;
-                        fprintf(f, "execute at @e[tag=scout_placer,limit=1] run setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
+                        fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
                     }
 
+            fclose(f);
+
+            // Execute function at position of marker
+            sprintf(path_buffer, "export/environment/place_segment_%03d_at_marker.mcfunction", count);
+            f = fopen(path_buffer, "w");
+            fprintf(f, "execute at @e[tag=scout_placer,limit=1] run function scout:environment/place_segment_%03d", count);
+            fclose(f);
+
+            // Next segment
+            count++;
             if (last_segment_in_list(environment.segment + i))
                 break;
 
@@ -125,12 +135,10 @@ void dump_environment(const Environment environment)
         }
     }
 
-    FILE *f;
-
     f = fopen("export/environment/place.mcfunction", "w");
     fprintf(f, "summon marker ~ ~ ~ {Tags:[\"scout_placer\"]}\n");
     for (size_t i = 0; i < count; i++)
-        fprintf(f, "schedule function scout:environment/place_segment_%03d %dt append\n", i, i + 1);
+        fprintf(f, "schedule function scout:environment/place_segment_%03d_at_marker %dt append\n", i, i + 1);
     fprintf(f, "schedule function scout:environment/place_finish %dt append\n", count + 1);
     fclose(f);
 

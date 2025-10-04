@@ -57,7 +57,7 @@ void update_world_generation(Environment *environment)
                 int x = gx + ox;
                 int y = gy + oy;
                 int z = gz + oz;
-                SegmentGet result = get_or_create_segment(&standard_environment, x, y, z);
+                SegmentGet result = get_or_create_segment(environment, x, y, z);
                 if (result.new_segment)
                     generate_segment(result.segment, x, y, z);
             }

@@ -83,10 +83,10 @@ void copy_environment(const Environment src, Environment *dst)
 
 void dump_environment(const Environment environment)
 {
-    FILE *f;
-    f = fopen("export/place_environment.mcfunction", "w");
+    char path_buffer[128];
 
     // Iterate over each linked list in the hash map
+    size_t count = 0;
     for (size_t n = 0; n < SEGMENT_HASH_MAP_SIZE; n++)
     {
         if (empty_segment_in_list(environment.segment + n))
@@ -95,10 +95,15 @@ void dump_environment(const Environment environment)
         size_t i = n;
         while (true)
         {
+            FILE *f;
+            sprintf(path_buffer, "export/environment/place_segment_%03d.mcfunction", count++);
+            f = fopen(path_buffer, "w");
+
             int base_x = environment.segment[i].grid_x * 16;
             int base_y = environment.segment[i].grid_y * 16;
             int base_z = environment.segment[i].grid_z * 16;
 
+            fprintf(f, "say Segment %03d\n", count - 1);
             for (int sx = 0; sx < 16; sx++)
                 for (int sy = 0; sy < 16; sy++)
                     for (int sz = 0; sz < 16; sz++)
@@ -110,7 +115,7 @@ void dump_environment(const Environment environment)
                         int x = base_x + sx;
                         int y = base_y + sy;
                         int z = base_z + sz;
-                        fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
+                        fprintf(f, "execute at @e[tag=scout_placer,limit=1] run setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
                     }
 
             if (last_segment_in_list(environment.segment + i))
@@ -120,11 +125,26 @@ void dump_environment(const Environment environment)
         }
     }
 
-    // Turtle (without program or inventory, just for reference)
-    fprintf(f, "setblock ~%d ~%d ~%d ", environment.scout.x, environment.scout.y, environment.scout.z);
-    fprintf(f, "computercraft:turtle_normal[facing=%s", direction_to_mc_string(environment.scout.facing));
-    fprintf(f, "]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n");
+    FILE *f;
 
+    f = fopen("export/environment/place.mcfunction", "w");
+    fprintf(f, "summon marker ~ ~ ~ {Tags:[\"scout_placer\"]}\n");
+    for (size_t i = 0; i < count; i++)
+        fprintf(f, "schedule function scout:environment/place_segment_%03d %dt append\n", i, i + 1);
+    fprintf(f, "schedule function scout:environment/place_finish %dt append\n", count + 1);
+    fclose(f);
+
+    f = fopen("export/environment/place_finish.mcfunction", "w");
+
+    // Turtle (without program or inventory, just for reference)
+    fprintf(f,
+            "execute at @e[tag=scout_placer,limit=1] run setblock ~%d ~%d ~%d computercraft:turtle_normal[facing=%s]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n",
+            environment.scout.x,
+            environment.scout.y,
+            environment.scout.z,
+            direction_to_mc_string(environment.scout.facing));
+
+    fprintf(f, "kill @e[tag=scout_placer,limit=1]\n", count + 1);
     fclose(f);
 }
 

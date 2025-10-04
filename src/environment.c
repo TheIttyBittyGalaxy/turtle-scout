@@ -81,13 +81,23 @@ void copy_environment(const Environment src, Environment *dst)
     COPY(src.segment, dst->segment, src.capacity);
 }
 
+// TODO: Maybe there is something clever we can go by generating a bunch of fill
+//       commands rather than doing an individual setblock for each and every block?
+//       Or maybe we can use MC structure files instead of command functions?
 void dump_environment(const Environment environment)
 {
-    FILE *f;
+    FILE *placement;
     char path_buffer[512];
 
+    size_t placement_count = 0;
+    size_t command_chain_length = 0;
+
+    // Create first placement
+    sprintf(path_buffer, "export/environment/placement_%03d.mcfunction", placement_count);
+    placement = fopen(path_buffer, "w");
+    placement_count++;
+
     // Iterate over each linked list in the hash map
-    size_t count = 0;
     for (size_t n = 0; n < SEGMENT_HASH_MAP_SIZE; n++)
     {
         if (empty_segment_in_list(environment.segment + n))
@@ -96,13 +106,20 @@ void dump_environment(const Environment environment)
         size_t i = n;
         while (true)
         {
+            // NOTE: `maxCommandChainLength` is 65536, and so any function needs to contain fewer commands than that
+            // https://minecraft.fandom.com/wiki/Game_rule
+            if (command_chain_length >= 60000)
+            {
+                fclose(placement);
+                sprintf(path_buffer, "export/environment/placement_%03d.mcfunction", placement_count);
+                placement = fopen(path_buffer, "w");
+                placement_count++;
+                command_chain_length = 0;
+            }
+
             int base_x = environment.segment[i].grid_x * 16;
             int base_y = environment.segment[i].grid_y * 16;
             int base_z = environment.segment[i].grid_z * 16;
-
-            // Place segment function
-            sprintf(path_buffer, "export/environment/place_segment_%03d.mcfunction", count);
-            f = fopen(path_buffer, "w");
 
             for (int sx = 0; sx < 16; sx++)
                 for (int sy = 0; sy < 16; sy++)
@@ -112,47 +129,47 @@ void dump_environment(const Environment environment)
                         if (block == AIR)
                             continue;
 
-                        int x = base_x + sx;
-                        int y = base_y + sy;
-                        int z = base_z + sz;
-                        fprintf(f, "setblock ~%d ~%d ~%d %s\n", x, y, z, item_to_mc(block));
+                        fprintf(placement, "setblock ~%d ~%d ~%d %s\n",
+                                base_x + sx,
+                                base_y + sy,
+                                base_z + sz,
+                                item_to_mc(block));
+                        command_chain_length++;
                     }
 
-            fclose(f);
-
-            // Execute function at position of marker
-            sprintf(path_buffer, "export/environment/place_segment_%03d_at_marker.mcfunction", count);
-            f = fopen(path_buffer, "w");
-            fprintf(f, "execute at @e[tag=scout_placer,limit=1] run function scout:environment/place_segment_%03d", count);
-            fclose(f);
-
-            // Next segment
-            count++;
             if (last_segment_in_list(environment.segment + i))
                 break;
-
             i = environment.segment[i].next;
         }
     }
 
-    f = fopen("export/environment/place.mcfunction", "w");
-    fprintf(f, "summon marker ~ ~ ~ {Tags:[\"scout_placer\"]}\n");
-    for (size_t i = 0; i < count; i++)
-        fprintf(f, "schedule function scout:environment/place_segment_%03d_at_marker %dt append\n", i, i + 1);
-    fprintf(f, "schedule function scout:environment/place_finish %dt append\n", count + 1);
-    fclose(f);
-
-    f = fopen("export/environment/place_finish.mcfunction", "w");
-
-    // Turtle (without program or inventory, just for reference)
-    fprintf(f,
-            "execute at @e[tag=scout_placer,limit=1] run setblock ~%d ~%d ~%d computercraft:turtle_normal[facing=%s]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n",
+    // Append additional commands to last placement
+    fprintf(placement, // Turtle (without program or inventory, just for reference)
+            "execute at @e[tag=scout_marker,limit=1] run setblock ~%d ~%d ~%d computercraft:turtle_normal[facing=%s]{LeftUpgrade: {id: \"minecraft:diamond_pickaxe\"}}\n",
             environment.scout.x,
             environment.scout.y,
             environment.scout.z,
             direction_to_mc_string(environment.scout.facing));
 
-    fprintf(f, "kill @e[tag=scout_placer,limit=1]\n", count + 1);
+    fprintf(placement, "kill @e[tag=scout_marker,limit=1]\n", placement_count + 1);
+
+    fclose(placement);
+    placement = NULL;
+
+    // As marker functions
+    for (size_t i = 0; i < placement_count; i++)
+    {
+        sprintf(path_buffer, "export/environment/placement_at_marker_%03d.mcfunction", i);
+        FILE *f = fopen(path_buffer, "w");
+        fprintf(f, "execute at @e[tag=scout_marker,limit=1] run function scout:environment/placement_%03d", i);
+        fclose(f);
+    }
+
+    // Place function
+    FILE *f = fopen("export/environment/place.mcfunction", "w");
+    fprintf(f, "summon marker ~ ~ ~ {Tags:[\"scout_marker\"]}\n");
+    for (size_t i = 0; i < placement_count; i++)
+        fprintf(f, "schedule function scout:environment/placement_at_marker_%03d %dt append\n", i, i + 1);
     fclose(f);
 }
 
